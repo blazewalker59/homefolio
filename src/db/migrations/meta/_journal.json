@@ -15,6 +15,13 @@
       "when": 1780453329413,
       "tag": "0001_nebulous_proemial_gods",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780501470482,
+      "tag": "0002_flat_gorgon",
+      "breakpoints": true
     }
   ]
 }
