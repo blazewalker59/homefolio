@@ -11,14 +11,29 @@ import {
   updateSystemUnitFn,
   deleteSystemUnitFn,
 } from "@/server/system";
-import { systems, systemUnits } from "@/db/schema";
+import {
+  seedTemplatesFn,
+  listTemplatesFn,
+  listItemsBySystemUnitFn,
+  createItemFn,
+} from "@/server/item";
+import { ItemFormModal } from "@/components/ItemFormModal";
+import { systems, systemUnits, itemTemplates, items } from "@/db/schema";
 import type { InferSelectModel } from "drizzle-orm";
 
 type System = InferSelectModel<typeof systems>;
 type SystemUnit = InferSelectModel<typeof systemUnits>;
+type Template = InferSelectModel<typeof itemTemplates>;
+type ItemWithTemplate = InferSelectModel<typeof items> & {
+  template?: Template;
+};
+
+interface SystemUnitWithItems extends SystemUnit {
+  items: ItemWithTemplate[];
+}
 
 interface SystemWithUnits extends System {
-  units: SystemUnit[];
+  units: SystemUnitWithItems[];
 }
 
 export const Route = createFileRoute("/systems")({
@@ -29,14 +44,24 @@ export const Route = createFileRoute("/systems")({
         throw redirect({ to: "/setup" });
       }
       const systemsList = await listSystemsFn();
-      // Fetch units for each system.
+
+      await seedTemplatesFn();
+      const templates = await listTemplatesFn();
+
       const systemsWithUnits: SystemWithUnits[] = await Promise.all(
         systemsList.map(async (system) => {
           const units = await listSystemUnitsFn({ data: { systemId: system.id } });
-          return { ...system, units };
+          const unitsWithItems: SystemUnitWithItems[] = await Promise.all(
+            units.map(async (unit) => {
+              const unitItems = await listItemsBySystemUnitFn({ data: { systemUnitId: unit.id } });
+              return { ...unit, items: unitItems as ItemWithTemplate[] };
+            }),
+          );
+          return { ...system, units: unitsWithItems };
         }),
       );
-      return { home, systems: systemsWithUnits };
+
+      return { home, systems: systemsWithUnits, templates };
     } catch (err) {
       if (err instanceof Error && err.message === "Not authenticated") {
         throw redirect({ to: "/sign-in" });
@@ -48,12 +73,13 @@ export const Route = createFileRoute("/systems")({
 });
 
 function SystemsPage() {
-  const { home, systems: initialSystems } = Route.useLoaderData();
+  const { home, systems: initialSystems, templates } = Route.useLoaderData();
   const [systems, setSystems] = useState(initialSystems);
   const [showCreate, setShowCreate] = useState(false);
   const [editingSystem, setEditingSystem] = useState<System | null>(null);
   const [addUnitSystem, setAddUnitSystem] = useState<System | null>(null);
   const [editingUnit, setEditingUnit] = useState<SystemUnit | null>(null);
+  const [addItemUnitId, setAddItemUnitId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -101,7 +127,9 @@ function SystemsPage() {
     try {
       const newUnit = await createSystemUnitFn({ data: { systemId, ...data } });
       setSystems((prev) =>
-        prev.map((s) => (s.id === systemId ? { ...s, units: [...s.units, newUnit] } : s)),
+        prev.map((s) =>
+          s.id === systemId ? { ...s, units: [...s.units, { ...newUnit, items: [] }] } : s,
+        ),
       );
       setAddUnitSystem(null);
     } catch (err) {
@@ -118,7 +146,7 @@ function SystemsPage() {
       setSystems((prev) =>
         prev.map((s) => ({
           ...s,
-          units: s.units.map((u) => (u.id === unitId ? updated : u)),
+          units: s.units.map((u) => (u.id === unitId ? { ...u, ...updated } : u)),
         })),
       );
       setEditingUnit(null);
@@ -144,6 +172,36 @@ function SystemsPage() {
       setPending(false);
     }
   }
+
+  async function handleCreateItem(data: {
+    templateId: string;
+    name: string;
+    roomId?: string;
+    systemUnitId?: string;
+    fields: Record<string, unknown>;
+  }) {
+    if (!addItemUnitId) return;
+    setPending(true);
+    try {
+      await createItemFn({ data: { ...data, systemUnitId: addItemUnitId } });
+      const updatedItems = await listItemsBySystemUnitFn({ data: { systemUnitId: addItemUnitId } });
+      setSystems((prev) =>
+        prev.map((s) => ({
+          ...s,
+          units: s.units.map((u) =>
+            u.id === addItemUnitId ? { ...u, items: updatedItems as ItemWithTemplate[] } : u,
+          ),
+        })),
+      );
+      setAddItemUnitId(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to create item");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  const addItemUnit = systems.flatMap((s) => s.units).find((u) => u.id === addItemUnitId);
 
   return (
     <main className="page-wrap px-4 pb-8 pt-14">
@@ -191,6 +249,7 @@ function SystemsPage() {
               onAddUnit={() => setAddUnitSystem(system)}
               onEditUnit={(unit) => setEditingUnit(unit)}
               onDeleteUnit={(unitId) => handleDeleteUnit(unitId, system.id)}
+              onAddItem={(unitId) => setAddItemUnitId(unitId)}
               pending={pending}
             />
           ))}
@@ -238,6 +297,17 @@ function SystemsPage() {
           pending={pending}
         />
       )}
+
+      {addItemUnit && (
+        <ItemFormModal
+          templates={templates}
+          title={`Add Item to ${addItemUnit.name}`}
+          defaultSystemUnitId={addItemUnit.id}
+          onSubmit={handleCreateItem}
+          onCancel={() => setAddItemUnitId(null)}
+          pending={pending}
+        />
+      )}
     </main>
   );
 }
@@ -249,14 +319,16 @@ function SystemCard({
   onAddUnit,
   onEditUnit,
   onDeleteUnit,
+  onAddItem,
   pending,
 }: {
   system: SystemWithUnits;
   onEdit: () => void;
   onDelete: () => void;
   onAddUnit: () => void;
-  onEditUnit: (unit: SystemUnit) => void;
+  onEditUnit: (unit: SystemUnitWithItems) => void;
   onDeleteUnit: (unitId: string) => void;
+  onAddItem: (unitId: string) => void;
   pending: boolean;
 }) {
   return (
@@ -287,29 +359,54 @@ function SystemCard({
       </div>
 
       {system.units.length > 0 && (
-        <div className="mt-3 space-y-2 border-t border-[var(--line)] pt-3">
+        <div className="mt-3 space-y-3 border-t border-[var(--line)] pt-3">
           {system.units.map((unit) => (
-            <div
-              key={unit.id}
-              className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2"
-            >
-              <span className="text-sm text-[var(--sea-ink)]">{unit.name}</span>
-              <div className="flex gap-1.5">
-                <button
-                  onClick={() => onEditUnit(unit)}
-                  disabled={pending}
-                  className="rounded px-2 py-1 text-xs text-[var(--sea-ink-soft)] transition hover:bg-gray-200 disabled:opacity-50"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => onDeleteUnit(unit.id)}
-                  disabled={pending}
-                  className="rounded px-2 py-1 text-xs text-red-500 transition hover:bg-red-100 disabled:opacity-50"
-                >
-                  Delete
-                </button>
+            <div key={unit.id} className="rounded-lg bg-gray-50 p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-[var(--sea-ink)]">{unit.name}</span>
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => onEditUnit(unit)}
+                    disabled={pending}
+                    className="rounded px-2 py-1 text-xs text-[var(--sea-ink-soft)] transition hover:bg-gray-200 disabled:opacity-50"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => onDeleteUnit(unit.id)}
+                    disabled={pending}
+                    className="rounded px-2 py-1 text-xs text-red-500 transition hover:bg-red-100 disabled:opacity-50"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
+
+              {unit.items.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {unit.items.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between rounded bg-white px-2 py-1"
+                    >
+                      <span className="text-xs text-[var(--sea-ink)]">{item.name}</span>
+                      {item.template && (
+                        <span className="text-xs text-[var(--sea-ink-soft)]">
+                          {item.template.category}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <button
+                onClick={() => onAddItem(unit.id)}
+                disabled={pending}
+                className="mt-2 w-full rounded border border-dashed border-[var(--line)] bg-transparent px-2 py-1 text-xs font-medium text-[var(--sea-ink-soft)] transition hover:border-[var(--lagoon-deep)] hover:text-[var(--lagoon-deep)] disabled:opacity-50"
+              >
+                + Add Item
+              </button>
             </div>
           ))}
         </div>
