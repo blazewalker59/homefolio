@@ -177,6 +177,12 @@ function ItemsPage() {
             Add Item
           </button>
           <Link
+            to="/templates"
+            className="rounded-full border border-[var(--line)] bg-white px-6 py-3 text-sm font-semibold text-[var(--sea-ink)] transition hover:bg-gray-50"
+          >
+            Manage Templates
+          </Link>
+          <Link
             to="/"
             className="rounded-full border border-[var(--line)] bg-white px-6 py-3 text-sm font-semibold text-[var(--sea-ink)] transition hover:bg-gray-50"
           >

@@ -8,7 +8,7 @@
  * if they have attached documents.
  */
 
-import { eq } from "drizzle-orm";
+import { and, eq, isNull, or } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { items, itemTemplates } from "@/db/schema";
 import type { TemplateField } from "@/db/schema";
@@ -53,11 +53,21 @@ export async function seedBuiltInTemplates(
 }
 
 /**
- * List all item templates.
+ * List all item templates available for a home.
+ *
+ * Returns built-in templates (homeId = null) plus custom templates
+ * belonging to the specified home.
  */
-export async function listTemplates() {
+export async function listTemplates(homeId?: string) {
   const db = await getDb();
-  return db.select().from(itemTemplates).orderBy(itemTemplates.name);
+  if (!homeId) {
+    return db.select().from(itemTemplates).orderBy(itemTemplates.name);
+  }
+  return db
+    .select()
+    .from(itemTemplates)
+    .where(or(isNull(itemTemplates.homeId), eq(itemTemplates.homeId, homeId)))
+    .orderBy(itemTemplates.name);
 }
 
 /**
@@ -68,6 +78,106 @@ export async function getTemplate(templateId: string) {
   return db.query.itemTemplates.findFirst({
     where: eq(itemTemplates.id, templateId),
   });
+}
+
+/**
+ * List custom templates for a specific home.
+ */
+export async function listCustomTemplates(homeId: string) {
+  const db = await getDb();
+  return db
+    .select()
+    .from(itemTemplates)
+    .where(and(eq(itemTemplates.homeId, homeId), eq(itemTemplates.isBuiltIn, false)))
+    .orderBy(itemTemplates.name);
+}
+
+/**
+ * Create a custom template for a home.
+ */
+export async function createCustomTemplate(params: {
+  homeId: string;
+  name: string;
+  category: string;
+  description?: string;
+  fields: TemplateField[];
+}) {
+  const db = await getDb();
+  const [created] = await db
+    .insert(itemTemplates)
+    .values({
+      homeId: params.homeId,
+      name: params.name,
+      category: params.category,
+      description: params.description,
+      fields: params.fields,
+      isBuiltIn: false,
+    })
+    .returning();
+  return created;
+}
+
+/**
+ * Update a custom template.
+ *
+ * Only custom templates (isBuiltIn = false) can be updated.
+ */
+export async function updateCustomTemplate(
+  templateId: string,
+  updates: {
+    name?: string;
+    category?: string;
+    description?: string | null;
+    fields?: TemplateField[];
+  },
+) {
+  const db = await getDb();
+  const [updated] = await db
+    .update(itemTemplates)
+    .set({ ...updates, updatedAt: new Date() })
+    .where(and(eq(itemTemplates.id, templateId), eq(itemTemplates.isBuiltIn, false)))
+    .returning();
+  return updated;
+}
+
+/**
+ * Check if a custom template can be safely deleted.
+ *
+ * Returns { canDelete: true } if no items use this template,
+ * or { canDelete: false, reason: string } if items exist.
+ */
+export async function canDeleteCustomTemplate(
+  templateId: string,
+): Promise<{ canDelete: true } | { canDelete: false; reason: string }> {
+  const db = await getDb();
+  const itemsUsingTemplate = await db
+    .select()
+    .from(items)
+    .where(eq(items.templateId, templateId))
+    .limit(1);
+
+  if (itemsUsingTemplate.length > 0) {
+    return { canDelete: false, reason: "Cannot delete template: items are using it" };
+  }
+  return { canDelete: true };
+}
+
+/**
+ * Delete a custom template.
+ *
+ * Throws an error if items are using this template (orphan protection).
+ * Only custom templates (isBuiltIn = false) can be deleted.
+ */
+export async function deleteCustomTemplate(templateId: string): Promise<void> {
+  const check = await canDeleteCustomTemplate(templateId);
+  if (!check.canDelete) {
+    throw new Error(check.reason);
+  }
+
+  const db = await getDb();
+  await db
+    .delete(itemTemplates)
+    .where(and(eq(itemTemplates.id, templateId), eq(itemTemplates.isBuiltIn, false)));
 }
 
 /**

@@ -16,7 +16,11 @@ import { getHome } from "@/lib/home";
 import {
   seedBuiltInTemplates,
   listTemplates,
+  listCustomTemplates,
   getTemplate,
+  createCustomTemplate,
+  updateCustomTemplate,
+  deleteCustomTemplate,
   createItem,
   listItems,
   listItemsByRoom,
@@ -28,6 +32,7 @@ import {
 } from "@/lib/item";
 import { requireSessionUser } from "@/lib/auth/session";
 import { BUILT_IN_TEMPLATES } from "@/lib/item-templates";
+import type { TemplateField } from "@/db/schema";
 
 // Serializable field type for server functions.
 type SerializableFields = Record<string, string | number | boolean | null>;
@@ -44,12 +49,118 @@ export const seedTemplatesFn = createServerFn({ method: "POST" }).handler(async 
 });
 
 /**
- * List all item templates.
+ * List all item templates available for the current user's home.
+ *
+ * Returns built-in templates plus custom templates for the home.
  */
 export const listTemplatesFn = createServerFn({ method: "GET" }).handler(async () => {
-  await requireSessionUser();
-  return listTemplates();
+  const user = await requireSessionUser();
+  const home = await getHome(user.id);
+  if (!home) return [];
+  return listTemplates(home.id);
 });
+
+/**
+ * List custom templates for the current user's home.
+ */
+export const listCustomTemplatesFn = createServerFn({ method: "GET" }).handler(async () => {
+  const user = await requireSessionUser();
+  const home = await getHome(user.id);
+  if (!home) return [];
+  return listCustomTemplates(home.id);
+});
+
+const templateFieldSchema: z.ZodType<TemplateField> = z.lazy(() =>
+  z.object({
+    key: z.string(),
+    label: z.string(),
+    type: z.enum(["text", "number", "date", "select", "boolean"]),
+    options: z.array(z.string()).optional(),
+    required: z.boolean().optional(),
+  }),
+);
+
+const createCustomTemplateSchema = z.object({
+  name: z.string().min(1, "Template name is required"),
+  category: z.string().min(1, "Category is required"),
+  description: z.string().optional(),
+  fields: z.array(templateFieldSchema).min(1, "At least one field is required"),
+});
+
+/**
+ * Create a custom template for the current user's home.
+ */
+export const createCustomTemplateFn = createServerFn({ method: "POST" })
+  .inputValidator((raw: unknown) => createCustomTemplateSchema.parse(raw))
+  .handler(async ({ data }) => {
+    const user = await requireSessionUser();
+    const home = await getHome(user.id);
+    if (!home) throw new Error("No home found for this user");
+
+    return createCustomTemplate({
+      homeId: home.id,
+      name: data.name,
+      category: data.category,
+      description: data.description,
+      fields: data.fields,
+    });
+  });
+
+const updateCustomTemplateSchema = z.object({
+  templateId: z.string().uuid(),
+  name: z.string().min(1).optional(),
+  category: z.string().min(1).optional(),
+  description: z.string().nullable().optional(),
+  fields: z.array(templateFieldSchema).min(1).optional(),
+});
+
+/**
+ * Update a custom template.
+ */
+export const updateCustomTemplateFn = createServerFn({ method: "POST" })
+  .inputValidator((raw: unknown) => updateCustomTemplateSchema.parse(raw))
+  .handler(async ({ data }) => {
+    await requireSessionUser();
+
+    const template = await getTemplate(data.templateId);
+    if (!template) throw new Error("Template not found");
+    if (template.isBuiltIn) throw new Error("Cannot update built-in template");
+
+    const updates: {
+      name?: string;
+      category?: string;
+      description?: string | null;
+      fields?: TemplateField[];
+    } = {};
+    if (data.name !== undefined) updates.name = data.name;
+    if (data.category !== undefined) updates.category = data.category;
+    if (data.description !== undefined) updates.description = data.description;
+    if (data.fields !== undefined) updates.fields = data.fields;
+
+    return updateCustomTemplate(data.templateId, updates);
+  });
+
+const deleteCustomTemplateSchema = z.object({
+  templateId: z.string().uuid(),
+});
+
+/**
+ * Delete a custom template.
+ *
+ * Throws if items are using this template (orphan protection).
+ */
+export const deleteCustomTemplateFn = createServerFn({ method: "POST" })
+  .inputValidator((raw: unknown) => deleteCustomTemplateSchema.parse(raw))
+  .handler(async ({ data }) => {
+    await requireSessionUser();
+
+    const template = await getTemplate(data.templateId);
+    if (!template) throw new Error("Template not found");
+    if (template.isBuiltIn) throw new Error("Cannot delete built-in template");
+
+    await deleteCustomTemplate(data.templateId);
+    return { success: true };
+  });
 
 /**
  * List all items for the current user's home.
