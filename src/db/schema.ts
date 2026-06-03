@@ -1,5 +1,15 @@
 import { relations } from "drizzle-orm";
-import { boolean, index, pgTable, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  index,
+  integer,
+  numeric,
+  pgTable,
+  text,
+  timestamp,
+  unique,
+  uuid,
+} from "drizzle-orm/pg-core";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Auth tables (Better Auth core schema)
@@ -110,12 +120,49 @@ export const verifications = pgTable(
 );
 
 // ──────────────────────────────────────────────────────────────────────────────
+// Home
+//
+// The single property a user has claimed. One user, one home (multi-home and
+// shared access are deferred). Auto-created on first sign-in via a database
+// hook in `src/lib/auth/server.ts`. All property facts are nullable — the user
+// fills them in during manual setup (Slice 2) or via property data API
+// (Slice 12). Archive fields (soldAt, salePrice) are set when the user marks
+// the home as sold (Slice 16).
+// ──────────────────────────────────────────────────────────────────────────────
+
+export const homes = pgTable(
+  "homes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" })
+      .unique(),
+    name: text("name"),
+    address: text("address"),
+    yearBuilt: integer("year_built"),
+    sqft: integer("sqft"),
+    lotSize: numeric("lot_size", { precision: 10, scale: 2 }),
+    bedCount: integer("bed_count"),
+    bathCount: integer("bath_count"),
+    purchasePrice: numeric("purchase_price", { precision: 12, scale: 2 }),
+    purchaseDate: timestamp("purchase_date", { withTimezone: true }),
+    soldAt: timestamp("sold_at", { withTimezone: true }),
+    salePrice: numeric("sale_price", { precision: 12, scale: 2 }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("homes_user_idx").on(t.userId)],
+);
+
+// ──────────────────────────────────────────────────────────────────────────────
 // Relations
 // ──────────────────────────────────────────────────────────────────────────────
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
   sessions: many(sessions),
   accounts: many(accounts),
+  home: one(homes, { fields: [users.id], references: [homes.userId] }),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -124,4 +171,8 @@ export const sessionsRelations = relations(sessions, ({ one }) => ({
 
 export const accountsRelations = relations(accounts, ({ one }) => ({
   user: one(users, { fields: [accounts.userId], references: [users.id] }),
+}));
+
+export const homesRelations = relations(homes, ({ one }) => ({
+  user: one(users, { fields: [homes.userId], references: [users.id] }),
 }));
