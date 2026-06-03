@@ -21,8 +21,8 @@ const appPlugins = isTest
   ? [viteReact()]
   : [
       devtools(),
-      nitro(
-        nitroPreset
+      nitro({
+        ...(nitroPreset
           ? {
               preset: nitroPreset,
               cloudflare: {
@@ -33,11 +33,9 @@ const appPlugins = isTest
                 },
               },
             }
-          : {},
-        {
-          rollupConfig: { external: [/^@sentry\//] },
-        },
-      ),
+          : {}),
+        rollupConfig: { external: [/^@sentry\//] },
+      }),
       tailwindcss(),
       tanstackStart(),
       viteReact(),

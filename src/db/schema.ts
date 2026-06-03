@@ -181,6 +181,51 @@ export const rooms = pgTable(
 );
 
 // ──────────────────────────────────────────────────────────────────────────────
+// System
+//
+// A home system (HVAC, electrical, plumbing, water heater, etc.). Systems can
+// have sub-units (e.g., "Upstairs Unit", "Downstairs Unit" for HVAC). Orphan
+// protection: systems cannot be deleted if they contain sub-units or items.
+// ──────────────────────────────────────────────────────────────────────────────
+
+export const systems = pgTable(
+  "systems",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    homeId: uuid("home_id")
+      .notNull()
+      .references(() => homes.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("systems_home_idx").on(t.homeId)],
+);
+
+// ──────────────────────────────────────────────────────────────────────────────
+// System Unit
+//
+// A sub-unit within a system (e.g., "Upstairs Unit" for an HVAC system).
+// Units belong to a system and cascade-delete with it.
+// ──────────────────────────────────────────────────────────────────────────────
+
+export const systemUnits = pgTable(
+  "system_units",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    systemId: uuid("system_id")
+      .notNull()
+      .references(() => systems.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("system_units_system_idx").on(t.systemId)],
+);
+
+// ──────────────────────────────────────────────────────────────────────────────
 // Relations
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -201,8 +246,18 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
 export const homesRelations = relations(homes, ({ one, many }) => ({
   user: one(users, { fields: [homes.userId], references: [users.id] }),
   rooms: many(rooms),
+  systems: many(systems),
 }));
 
 export const roomsRelations = relations(rooms, ({ one }) => ({
   home: one(homes, { fields: [rooms.homeId], references: [homes.id] }),
+}));
+
+export const systemsRelations = relations(systems, ({ one, many }) => ({
+  home: one(homes, { fields: [systems.homeId], references: [homes.id] }),
+  units: many(systemUnits),
+}));
+
+export const systemUnitsRelations = relations(systemUnits, ({ one }) => ({
+  system: one(systems, { fields: [systemUnits.systemId], references: [systems.id] }),
 }));
