@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { getHomeFn } from "@/server/home";
 
 export const Route = createFileRoute("/")({
@@ -64,12 +64,62 @@ function Dashboard() {
         )}
       </section>
 
+      <section className="mt-8 grid gap-4 sm:grid-cols-2">
+        <Link
+          to="/rooms"
+          className="island-shell feature-card rise-in flex items-center justify-between rounded-2xl p-6 no-underline transition hover:-translate-y-0.5 hover:shadow-lg"
+        >
+          <div>
+            <h2 className="text-lg font-semibold text-[var(--sea-ink)]">Rooms</h2>
+            <p className="mt-1 text-sm text-[var(--sea-ink-soft)]">
+              Manage bedrooms, bathrooms, kitchen, and more
+            </p>
+          </div>
+          <svg
+            className="h-6 w-6 text-[var(--sea-ink-soft)]"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </Link>
+
+        <Link
+          to="/systems"
+          className="island-shell feature-card rise-in flex items-center justify-between rounded-2xl p-6 no-underline transition hover:-translate-y-0.5 hover:shadow-lg"
+        >
+          <div>
+            <h2 className="text-lg font-semibold text-[var(--sea-ink)]">Systems</h2>
+            <p className="mt-1 text-sm text-[var(--sea-ink-soft)]">
+              Track HVAC, electrical, plumbing, and more
+            </p>
+          </div>
+          <svg
+            className="h-6 w-6 text-[var(--sea-ink-soft)]"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </Link>
+      </section>
+
       <section className="island-shell mt-8 rounded-2xl p-6">
         <p className="island-kicker mb-2">Next steps</p>
-        <ul className="m-0 list-disc space-y-2 pl-5 text-sm text-[var(--sea-ink-soft)]">
-          <li>Add rooms to your home</li>
-          <li>Set up systems (HVAC, electrical, plumbing)</li>
-          <li>Start cataloging items and maintenance</li>
+        <ul className="m-0 list-none space-y-2 text-sm">
+          <li>
+            <Link to="/rooms" className="text-[var(--lagoon-deep)] underline hover:no-underline">
+              Add rooms to your home
+            </Link>
+          </li>
+          <li>
+            <Link to="/systems" className="text-[var(--lagoon-deep)] underline hover:no-underline">
+              Set up systems (HVAC, electrical, plumbing)
+            </Link>
+          </li>
+          <li className="text-[var(--sea-ink-soft)]">Start cataloging items and maintenance</li>
         </ul>
       </section>
     </main>
