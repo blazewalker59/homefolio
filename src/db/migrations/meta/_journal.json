@@ -29,6 +29,13 @@
       "when": 1780512751686,
       "tag": "0003_loose_electro",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1780513772190,
+      "tag": "0004_redundant_obadiah_stane",
+      "breakpoints": true
     }
   ]
 }

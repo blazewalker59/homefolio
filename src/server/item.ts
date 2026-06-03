@@ -1,0 +1,207 @@
+/**
+ * Server functions for item management.
+ *
+ * These run on the server only (TanStack Start strips the `"use server"`
+ * body from client bundles). They are the single write path into the
+ * `items` table, so business rules (template snapshot, orphan protection)
+ * live here rather than scattered across the UI.
+ *
+ * Authentication: `requireSessionUser()` reads the Better Auth session
+ * from request cookies and throws if the caller is anonymous.
+ */
+
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { getHome } from "@/lib/home";
+import {
+  seedBuiltInTemplates,
+  listTemplates,
+  getTemplate,
+  createItem,
+  listItems,
+  listItemsByRoom,
+  listItemsBySystemUnit,
+  getItem,
+  updateItem,
+  moveItem,
+  deleteItem,
+} from "@/lib/item";
+import { requireSessionUser } from "@/lib/auth/session";
+import { BUILT_IN_TEMPLATES } from "@/lib/item-templates";
+
+// Serializable field type for server functions.
+type SerializableFields = Record<string, string | number | boolean | null>;
+
+/**
+ * Seed built-in templates if they don't exist.
+ *
+ * Called on first run to populate the item_templates table.
+ */
+export const seedTemplatesFn = createServerFn({ method: "POST" }).handler(async () => {
+  await requireSessionUser();
+  await seedBuiltInTemplates(BUILT_IN_TEMPLATES);
+  return { success: true };
+});
+
+/**
+ * List all item templates.
+ */
+export const listTemplatesFn = createServerFn({ method: "GET" }).handler(async () => {
+  await requireSessionUser();
+  return listTemplates();
+});
+
+/**
+ * List all items for the current user's home.
+ */
+export const listItemsFn = createServerFn({ method: "GET" }).handler(async () => {
+  const user = await requireSessionUser();
+  const home = await getHome(user.id);
+  if (!home) return [];
+  const items = await listItems(home.id);
+  return items as Array<(typeof items)[number] & { fields: SerializableFields }>;
+});
+
+/**
+ * List items by room.
+ */
+export const listItemsByRoomFn = createServerFn({ method: "GET" })
+  .inputValidator((raw: unknown) => z.object({ roomId: z.string().uuid() }).parse(raw))
+  .handler(async ({ data }) => {
+    await requireSessionUser();
+    const items = await listItemsByRoom(data.roomId);
+    return items as Array<(typeof items)[number] & { fields: SerializableFields }>;
+  });
+
+/**
+ * List items by system unit.
+ */
+export const listItemsBySystemUnitFn = createServerFn({ method: "GET" })
+  .inputValidator((raw: unknown) => z.object({ systemUnitId: z.string().uuid() }).parse(raw))
+  .handler(async ({ data }) => {
+    await requireSessionUser();
+    const items = await listItemsBySystemUnit(data.systemUnitId);
+    return items as Array<(typeof items)[number] & { fields: SerializableFields }>;
+  });
+
+const createItemSchema = z.object({
+  templateId: z.string().uuid(),
+  name: z.string().min(1, "Item name is required"),
+  roomId: z.string().uuid().nullable().optional(),
+  systemUnitId: z.string().uuid().nullable().optional(),
+  fields: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])),
+});
+
+/**
+ * Create an item from a template.
+ *
+ * Snapshots the template's fields at creation time.
+ */
+export const createItemFn = createServerFn({ method: "POST" })
+  .inputValidator((raw: unknown) => createItemSchema.parse(raw))
+  .handler(async ({ data }) => {
+    const user = await requireSessionUser();
+    const home = await getHome(user.id);
+    if (!home) throw new Error("No home found for this user");
+
+    // Verify the template exists.
+    const template = await getTemplate(data.templateId);
+    if (!template) throw new Error("Template not found");
+
+    const item = await createItem({
+      homeId: home.id,
+      templateId: data.templateId,
+      name: data.name,
+      roomId: data.roomId ?? undefined,
+      systemUnitId: data.systemUnitId ?? undefined,
+      fields: data.fields as Record<string, unknown>,
+    });
+    return item as typeof item & { fields: SerializableFields };
+  });
+
+/**
+ * Get an item by ID.
+ */
+export const getItemFn = createServerFn({ method: "GET" })
+  .inputValidator((raw: unknown) => z.object({ itemId: z.string().uuid() }).parse(raw))
+  .handler(async ({ data }) => {
+    await requireSessionUser();
+    const item = await getItem(data.itemId);
+    return item as (typeof item & { fields: SerializableFields }) | undefined;
+  });
+
+const updateItemSchema = z.object({
+  itemId: z.string().uuid(),
+  name: z.string().min(1).optional(),
+  roomId: z.string().uuid().nullable().optional(),
+  systemUnitId: z.string().uuid().nullable().optional(),
+  fields: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).optional(),
+});
+
+/**
+ * Update an item's details.
+ */
+export const updateItemFn = createServerFn({ method: "POST" })
+  .inputValidator((raw: unknown) => updateItemSchema.parse(raw))
+  .handler(async ({ data }) => {
+    await requireSessionUser();
+
+    // Verify the item exists.
+    const item = await getItem(data.itemId);
+    if (!item) throw new Error("Item not found");
+
+    const updates: {
+      name?: string;
+      roomId?: string | null;
+      systemUnitId?: string | null;
+      fields?: Record<string, unknown>;
+    } = {};
+    if (data.name !== undefined) updates.name = data.name;
+    if (data.roomId !== undefined) updates.roomId = data.roomId;
+    if (data.systemUnitId !== undefined) updates.systemUnitId = data.systemUnitId;
+    if (data.fields !== undefined) updates.fields = data.fields as Record<string, unknown>;
+
+    const updated = await updateItem(data.itemId, updates);
+    return updated as typeof updated & { fields: SerializableFields };
+  });
+
+const moveItemSchema = z.object({
+  itemId: z.string().uuid(),
+  roomId: z.string().uuid().nullable(),
+});
+
+/**
+ * Move an item to a different room.
+ */
+export const moveItemFn = createServerFn({ method: "POST" })
+  .inputValidator((raw: unknown) => moveItemSchema.parse(raw))
+  .handler(async ({ data }) => {
+    await requireSessionUser();
+
+    // Verify the item exists.
+    const item = await getItem(data.itemId);
+    if (!item) throw new Error("Item not found");
+
+    const moved = await moveItem(data.itemId, data.roomId);
+    return moved as typeof moved & { fields: SerializableFields };
+  });
+
+const deleteItemSchema = z.object({
+  itemId: z.string().uuid(),
+});
+
+/**
+ * Delete an item. Throws if the item has attached documents (orphan protection).
+ */
+export const deleteItemFn = createServerFn({ method: "POST" })
+  .inputValidator((raw: unknown) => deleteItemSchema.parse(raw))
+  .handler(async ({ data }) => {
+    await requireSessionUser();
+
+    // Verify the item exists.
+    const item = await getItem(data.itemId);
+    if (!item) throw new Error("Item not found");
+
+    await deleteItem(data.itemId);
+    return { success: true };
+  });

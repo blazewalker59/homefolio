@@ -3,6 +3,7 @@ import {
   boolean,
   index,
   integer,
+  jsonb,
   numeric,
   pgTable,
   text,
@@ -10,6 +11,18 @@ import {
   unique,
   uuid,
 } from "drizzle-orm/pg-core";
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Types
+// ──────────────────────────────────────────────────────────────────────────────
+
+export interface TemplateField {
+  key: string;
+  label: string;
+  type: "text" | "number" | "date" | "select" | "boolean";
+  options?: string[];
+  required?: boolean;
+}
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Auth tables (Better Auth core schema)
@@ -226,6 +239,67 @@ export const systemUnits = pgTable(
 );
 
 // ──────────────────────────────────────────────────────────────────────────────
+// Item Template
+//
+// Templates define the structure for items. Built-in templates (paint, window,
+// outlet, furniture, air filter) are seeded at startup. Each template has a
+// `fields` JSON column that defines the schema for items created from it.
+// Items snapshot the template at creation — editing a template doesn't change
+// existing items.
+// ──────────────────────────────────────────────────────────────────────────────
+
+export const itemTemplates = pgTable(
+  "item_templates",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    category: text("category").notNull(),
+    description: text("description"),
+    fields: jsonb("fields").notNull().$type<TemplateField[]>(),
+    isBuiltIn: boolean("is_built_in").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("item_templates_category_idx").on(t.category)],
+);
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Item
+//
+// A physical item in the home. Items are created from templates and snapshot
+// the template's fields at creation time. An item can belong to a Room, a
+// System (or sub-unit), or both (dual membership). Moving an item between
+// rooms generates an activity entry (placeholder for Slice 9). Orphan
+// protection: items cannot be deleted if they have attached documents.
+// ──────────────────────────────────────────────────────────────────────────────
+
+export const items = pgTable(
+  "items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    homeId: uuid("home_id")
+      .notNull()
+      .references(() => homes.id, { onDelete: "cascade" }),
+    templateId: uuid("template_id")
+      .notNull()
+      .references(() => itemTemplates.id),
+    name: text("name").notNull(),
+    roomId: uuid("room_id").references(() => rooms.id, { onDelete: "set null" }),
+    systemUnitId: uuid("system_unit_id").references(() => systemUnits.id, {
+      onDelete: "set null",
+    }),
+    fields: jsonb("fields").notNull().$type<Record<string, unknown>>(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("items_home_idx").on(t.homeId),
+    index("items_room_idx").on(t.roomId),
+    index("items_system_unit_idx").on(t.systemUnitId),
+  ],
+);
+
+// ──────────────────────────────────────────────────────────────────────────────
 // Relations
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -247,10 +321,12 @@ export const homesRelations = relations(homes, ({ one, many }) => ({
   user: one(users, { fields: [homes.userId], references: [users.id] }),
   rooms: many(rooms),
   systems: many(systems),
+  items: many(items),
 }));
 
-export const roomsRelations = relations(rooms, ({ one }) => ({
+export const roomsRelations = relations(rooms, ({ one, many }) => ({
   home: one(homes, { fields: [rooms.homeId], references: [homes.id] }),
+  items: many(items),
 }));
 
 export const systemsRelations = relations(systems, ({ one, many }) => ({
@@ -258,6 +334,18 @@ export const systemsRelations = relations(systems, ({ one, many }) => ({
   units: many(systemUnits),
 }));
 
-export const systemUnitsRelations = relations(systemUnits, ({ one }) => ({
+export const systemUnitsRelations = relations(systemUnits, ({ one, many }) => ({
   system: one(systems, { fields: [systemUnits.systemId], references: [systems.id] }),
+  items: many(items),
+}));
+
+export const itemTemplatesRelations = relations(itemTemplates, ({ many }) => ({
+  items: many(items),
+}));
+
+export const itemsRelations = relations(items, ({ one }) => ({
+  home: one(homes, { fields: [items.homeId], references: [homes.id] }),
+  template: one(itemTemplates, { fields: [items.templateId], references: [itemTemplates.id] }),
+  room: one(rooms, { fields: [items.roomId], references: [rooms.id] }),
+  systemUnit: one(systemUnits, { fields: [items.systemUnitId], references: [systemUnits.id] }),
 }));
