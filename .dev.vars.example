@@ -1,0 +1,12 @@
+# Local Cloudflare Workers env for `wrangler dev`.
+#
+# `wrangler dev` does NOT read `.env.local` (that's the Vite/Node convention).
+# It reads `.dev.vars` instead. Copy this file to `.dev.vars` and fill in the
+# same values you put in `.env.local` so `vp dev` and `wrangler dev` behave
+# identically. `.dev.vars` is gitignored.
+
+DATABASE_URL=postgresql://<user>:<password>@<project>-pooler.<region>.aws.neon.tech/<db>?sslmode=require
+BETTER_AUTH_SECRET=
+BETTER_AUTH_URL=http://localhost:8787
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=

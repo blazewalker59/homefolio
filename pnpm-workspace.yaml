@@ -1,0 +1,13 @@
+allowBuilds:
+  esbuild: true
+  msw: true
+  sharp: set this to true or false
+  workerd: true
+onlyBuiltDependencies:
+  - esbuild
+  - lightningcss
+  - msw
+  - workerd
+overrides:
+  vite: npm:@voidzero-dev/vite-plus-core@latest
+  vitest: npm:@voidzero-dev/vite-plus-test@latest

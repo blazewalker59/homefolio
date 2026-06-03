@@ -1,0 +1,78 @@
+name: CI & Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch: {}
+
+# Cancel any in-flight run when a newer commit lands on the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Fast verification loop: format check, lint, typecheck, and tests.
+  # These mirror the local `vp run` scripts and run on every push/PR.
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # setup-vp installs the Vite+ toolchain, Node, and the package
+      # manager, and caches installs — replacing setup-node + pnpm setup.
+      - uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version: "24"
+          cache: true
+
+      - run: vp install
+
+      # `vp run check` = fmt --check + oxlint; `vp run typecheck` = tsc.
+      # We avoid the bundled `vp check` because its type-aware path is far
+      # too slow (see docs/adr/0001).
+      - name: Format + lint
+        run: vp run check
+
+      - name: Typecheck
+        run: vp run typecheck
+
+      - name: Test
+        run: vp test run
+
+  # Build the Cloudflare Workers bundle and deploy. Only on push to main,
+  # and only after verification passes.
+  deploy:
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version: "24"
+          cache: true
+
+      - run: vp install
+
+      # No build-time public env vars — the client bundle contains no
+      # embedded auth/DB config. Better Auth's browser client discovers its
+      # origin from window.location.origin at runtime, and all server
+      # secrets are set as Worker secrets via `wrangler secret put`.
+      - name: Build for Cloudflare Workers
+        run: vp run build:cf
+
+      # Runtime server vars (DATABASE_URL etc.) are NOT baked in — they are
+      # Worker secrets. This step just deploys the bundle.
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Wrangler reads `.wrangler/deploy/config.json` at the project
+          # root, which redirects it to Nitro's generated wrangler.json.
+          command: deploy
