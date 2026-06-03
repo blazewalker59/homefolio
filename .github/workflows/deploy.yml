@@ -64,7 +64,24 @@ jobs:
       # origin from window.location.origin at runtime, and all server
       # secrets are set as Worker secrets via `wrangler secret put`.
       - name: Build for Cloudflare Workers
-        run: vp run build:cf
+        run: pnpm build:cf
+
+      # Nitro doesn't generate a wrangler.toml in .output/, so we create
+      # one here with the worker name and entry point.
+      - name: Generate wrangler config
+        run: |
+          cat > .output/wrangler.toml << 'EOF'
+          name = "homefolio"
+          compatibility_date = "2025-03-15"
+          compatibility_flags = ["nodejs_compat"]
+          main = "./server/index.mjs"
+
+          [site]
+          bucket = "./public"
+
+          [observability]
+          enabled = true
+          EOF
 
       # Runtime server vars (DATABASE_URL etc.) are NOT baked in — they are
       # Worker secrets. This step just deploys the bundle.
@@ -73,6 +90,5 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # Wrangler reads `.wrangler/deploy/config.json` at the project
-          # root, which redirects it to Nitro's generated wrangler.json.
+          workingDirectory: .output
           command: deploy
