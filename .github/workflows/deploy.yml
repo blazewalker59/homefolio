@@ -66,29 +66,12 @@ jobs:
       - name: Build for Cloudflare Workers
         run: pnpm build:cf
 
-      # Nitro doesn't generate a wrangler.toml in .output/, so we create
-      # one here with the worker name and entry point.
-      - name: Generate wrangler config
-        run: |
-          cat > .output/wrangler.toml << 'EOF'
-          name = "homefolio"
-          compatibility_date = "2025-03-15"
-          compatibility_flags = ["nodejs_compat"]
-          main = "./server/index.mjs"
-
-          [site]
-          bucket = "./public"
-
-          [observability]
-          enabled = true
-          EOF
-
-      # Runtime server vars (DATABASE_URL etc.) are NOT baked in — they are
-      # Worker secrets. This step just deploys the bundle.
+      # Nitro 3.x generates `wrangler.json` in `.output/server/` and
+      # `.wrangler/deploy/config.json` at the project root. The wrangler
+      # action reads that config to find the worker entry point and assets.
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: .output
           command: deploy

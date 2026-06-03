@@ -10,12 +10,19 @@ type Room = InferSelectModel<typeof rooms>;
 
 export const Route = createFileRoute("/rooms")({
   loader: async () => {
-    const home = await getHomeFn();
-    if (!home?.address) {
-      throw redirect({ to: "/setup" });
+    try {
+      const home = await getHomeFn();
+      if (!home?.address) {
+        throw redirect({ to: "/setup" });
+      }
+      const rooms = await listRoomsFn();
+      return { home, rooms };
+    } catch (err) {
+      if (err instanceof Error && err.message === "Not authenticated") {
+        throw redirect({ to: "/sign-in" });
+      }
+      throw err;
     }
-    const rooms = await listRoomsFn();
-    return { home, rooms };
   },
   component: RoomsPage,
 });

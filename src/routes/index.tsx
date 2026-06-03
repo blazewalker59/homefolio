@@ -3,12 +3,19 @@ import { getHomeFn } from "@/server/home";
 
 export const Route = createFileRoute("/")({
   loader: async () => {
-    const home = await getHomeFn();
-    // Redirect to setup if home has no address yet.
-    if (!home?.address) {
-      throw redirect({ to: "/setup" });
+    try {
+      const home = await getHomeFn();
+      if (!home?.address) {
+        throw redirect({ to: "/setup" });
+      }
+      return { home };
+    } catch (err) {
+      // If not authenticated, redirect to sign-in.
+      if (err instanceof Error && err.message === "Not authenticated") {
+        throw redirect({ to: "/sign-in" });
+      }
+      throw err;
     }
-    return { home };
   },
   component: Dashboard,
 });
