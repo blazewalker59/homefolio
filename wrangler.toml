@@ -1,0 +1,6 @@
+name = "homefolio"
+compatibility_date = "2025-03-15"
+compatibility_flags = ["nodejs_compat"]
+
+[observability]
+enabled = true

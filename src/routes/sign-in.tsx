@@ -26,7 +26,7 @@ function SignInPage() {
           type="button"
           onClick={() => signInWithGoogle()}
           disabled={status === "loading"}
-          className="inline-flex w-full items-center justify-center gap-3 rounded-full border border-[rgba(23,58,64,0.2)] bg-white px-5 py-3 text-sm font-semibold text-[var(--sea-ink)] shadow-sm transition hover:-translate-y-0.5 hover:border-[rgba(23,58,64,0.35)] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+          className="inline-flex w-full items-center justify-center gap-3 rounded-full border border-[rgba(23,58,64,0.2)] bg-white px-5 py-3 text-sm font-semibold text-[#173a40] shadow-sm transition hover:-translate-y-0.5 hover:border-[rgba(23,58,64,0.35)] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20">
             <path

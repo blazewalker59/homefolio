@@ -156,6 +156,31 @@ export const homes = pgTable(
 );
 
 // ──────────────────────────────────────────────────────────────────────────────
+// Room
+//
+// A physical space within a home. Each room has a category from a configurable
+// list (Bedroom, Bathroom, Kitchen, etc.) and a user-provided name. Rooms are
+// ordered by sort_order. Orphan protection: rooms cannot be deleted if they
+// contain items or documents.
+// ──────────────────────────────────────────────────────────────────────────────
+
+export const rooms = pgTable(
+  "rooms",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    homeId: uuid("home_id")
+      .notNull()
+      .references(() => homes.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    category: text("category").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("rooms_home_idx").on(t.homeId)],
+);
+
+// ──────────────────────────────────────────────────────────────────────────────
 // Relations
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -173,6 +198,11 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
   user: one(users, { fields: [accounts.userId], references: [users.id] }),
 }));
 
-export const homesRelations = relations(homes, ({ one }) => ({
+export const homesRelations = relations(homes, ({ one, many }) => ({
   user: one(users, { fields: [homes.userId], references: [users.id] }),
+  rooms: many(rooms),
+}));
+
+export const roomsRelations = relations(rooms, ({ one }) => ({
+  home: one(homes, { fields: [rooms.homeId], references: [homes.id] }),
 }));
