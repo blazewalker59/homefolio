@@ -3,33 +3,43 @@
 ## Glossary
 
 ### User
+
 A homeowner who manages a single home. Multi-home and shared access are deferred.
 
 ### Home
+
 The single property a user has claimed. The top-level container for all data. Has an address (required), name (optional, defaults to "My Home"), and property facts (year built, sqft, lot size, purchase date/price).
 
 ### Room
+
 A physical space within a home (kitchen, bedroom, garage, backyard). Rooms hold spatial items — paint, windows, outlets, furniture, photos.
 
 ### System
+
 A cross-cutting infrastructure that spans rooms (HVAC, electrical, plumbing). Systems hold system-level items — air filters, circuit breakers, water heaters.
 
 ### Item
+
 A discrete thing tracked within a Home. Can optionally belong to a Room (physical location), a System (functional grouping), or both. Paint color, window, outlet, piece of furniture, air filter, thermostat, etc.
 
 ### Template
+
 A schema definition that specifies the expected attributes for a type of Item. Templates provide structure (e.g., a "Window" template expects dimensions, manufacturer, type) while allowing users to create custom templates for item types not covered by built-in defaults. Custom templates support four field types: text, number, date, and dropdown (select).
 
 ### Document
+
 A typed file stored in a generic file store. Documents have a type (receipt, image, manual, etc.) and can be attached to a Home, Room, System, or Item.
 
 ### Activity
+
 A timestamped event in the home's history. Activities form a chronological log — e.g., "painted the kitchen," "replaced HVAC filter," "purchased couch." Most user actions auto-generate activity entries.
 
 ### Blueprint
+
 A floor plan of the home. Optional — the app functions without one. Blueprints are a static image for visual reference, not interactive.
 
 ### Maintenance Reminder
+
 A time-based notification tied to an Item or System. Can be interval-based (every 90 days) or date-based (next service on 2026-09-01). Delivered in-app and optionally via email.
 
 ---
