@@ -22,27 +22,19 @@ const appPlugins = isTest
   : [
       devtools(),
       nitro({
-        // Actual Nitro options live under `config` for the Vite plugin.
-        config: {
-          ...(nitroPreset
-            ? {
-                preset: nitroPreset,
-                cloudflare: {
-                  // Everything under `wrangler` is merged into the generated
-                  // `.output/server/wrangler.json`. Pinning name + date here
-                  // so the Worker always deploys as `homefolio` and we control
-                  // the runtime compat date (2025-03-15 gives us nodejs_compat
-                  // v2 semantics).
-                  wrangler: {
-                    name: "homefolio",
-                    compatibility_date: "2025-03-15",
-                    observability: { enabled: true },
-                  },
+        ...(nitroPreset
+          ? {
+              preset: nitroPreset,
+              cloudflare: {
+                wrangler: {
+                  name: "homefolio",
+                  compatibility_date: "2025-03-15",
+                  observability: { enabled: true },
                 },
-              }
-            : {}),
-          rollupConfig: { external: [/^@sentry\//] },
-        },
+              },
+            }
+          : {}),
+        rollupConfig: { external: [/^@sentry\//] },
       }),
       tailwindcss(),
       tanstackStart(),
