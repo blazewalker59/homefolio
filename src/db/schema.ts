@@ -242,7 +242,8 @@ export const systemUnits = pgTable(
 // Item Template
 //
 // Templates define the structure for items. Built-in templates (paint, window,
-// outlet, furniture, air filter) are seeded at startup. Each template has a
+// outlet, furniture, air filter) are seeded at startup and have homeId = null
+// (global). Custom templates belong to a specific home. Each template has a
 // `fields` JSON column that defines the schema for items created from it.
 // Items snapshot the template at creation — editing a template doesn't change
 // existing items.
@@ -252,6 +253,7 @@ export const itemTemplates = pgTable(
   "item_templates",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    homeId: uuid("home_id").references(() => homes.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     category: text("category").notNull(),
     description: text("description"),
@@ -260,7 +262,10 @@ export const itemTemplates = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("item_templates_category_idx").on(t.category)],
+  (t) => [
+    index("item_templates_home_idx").on(t.homeId),
+    index("item_templates_category_idx").on(t.category),
+  ],
 );
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -322,6 +327,7 @@ export const homesRelations = relations(homes, ({ one, many }) => ({
   rooms: many(rooms),
   systems: many(systems),
   items: many(items),
+  itemTemplates: many(itemTemplates),
 }));
 
 export const roomsRelations = relations(rooms, ({ one, many }) => ({
@@ -339,7 +345,8 @@ export const systemUnitsRelations = relations(systemUnits, ({ one, many }) => ({
   items: many(items),
 }));
 
-export const itemTemplatesRelations = relations(itemTemplates, ({ many }) => ({
+export const itemTemplatesRelations = relations(itemTemplates, ({ one, many }) => ({
+  home: one(homes, { fields: [itemTemplates.homeId], references: [homes.id] }),
   items: many(items),
 }));
 

@@ -64,7 +64,7 @@ function Dashboard() {
         )}
       </section>
 
-      <section className="mt-8 grid gap-4 sm:grid-cols-2">
+      <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Link
           to="/rooms"
           className="island-shell feature-card rise-in flex items-center justify-between rounded-2xl p-6 no-underline transition hover:-translate-y-0.5 hover:shadow-lg"
@@ -104,6 +104,26 @@ function Dashboard() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </Link>
+
+        <Link
+          to="/items"
+          className="island-shell feature-card rise-in flex items-center justify-between rounded-2xl p-6 no-underline transition hover:-translate-y-0.5 hover:shadow-lg"
+        >
+          <div>
+            <h2 className="text-lg font-semibold text-[var(--sea-ink)]">Items</h2>
+            <p className="mt-1 text-sm text-[var(--sea-ink-soft)]">
+              Catalog furniture, fixtures, appliances, and more
+            </p>
+          </div>
+          <svg
+            className="h-6 w-6 text-[var(--sea-ink-soft)]"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </Link>
       </section>
 
       <section className="island-shell mt-8 rounded-2xl p-6">
@@ -119,7 +139,11 @@ function Dashboard() {
               Set up systems (HVAC, electrical, plumbing)
             </Link>
           </li>
-          <li className="text-[var(--sea-ink-soft)]">Start cataloging items and maintenance</li>
+          <li>
+            <Link to="/items" className="text-[var(--lagoon-deep)] underline hover:no-underline">
+              Start cataloging items
+            </Link>
+          </li>
         </ul>
       </section>
     </main>
