@@ -45,9 +45,17 @@ export function useUser(): SessionUser | null {
 /**
  * Sign out the current user. Better Auth clears the session cookie and
  * the in-memory nanostore, which triggers a re-render through `useSession`.
+ * After sign-out we navigate to `/sign-in` so the user sees a clear
+ * logged-out state.
  */
 export async function signOut(): Promise<void> {
-  await authClient.signOut();
+  await authClient.signOut({
+    fetchOptions: {
+      onSuccess: () => {
+        window.location.href = "/sign-in";
+      },
+    },
+  });
 }
 
 /**
