@@ -20,7 +20,9 @@
 import { createStartHandler, defaultStreamHandler } from "@tanstack/react-start/server";
 import type { Register } from "@tanstack/react-router";
 import type { RequestHandler } from "@tanstack/react-start/server";
+import type { R2Bucket } from "@cloudflare/workers-types";
 import { getAuth } from "@/lib/auth/server";
+import { initStorageProvider } from "@/lib/storage";
 
 const startFetch = createStartHandler(defaultStreamHandler);
 
@@ -34,6 +36,13 @@ function isAuthRequest(request: Request): boolean {
 
 async function fetch(...args: Parameters<RequestHandler<Register>>) {
   const request = args[0];
+  const env = args[1] as { DOCUMENTS_BUCKET?: R2Bucket } | undefined;
+
+  // Initialize storage provider if R2 bucket is available
+  if (env?.DOCUMENTS_BUCKET) {
+    initStorageProvider(env.DOCUMENTS_BUCKET);
+  }
+
   if (isAuthRequest(request)) {
     const auth = await getAuth();
     return auth.handler(request);

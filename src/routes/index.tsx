@@ -124,6 +124,26 @@ function Dashboard() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </Link>
+
+        <Link
+          to="/documents"
+          className="island-shell feature-card rise-in flex items-center justify-between rounded-2xl p-6 no-underline transition hover:-translate-y-0.5 hover:shadow-lg"
+        >
+          <div>
+            <h2 className="text-lg font-semibold text-[var(--sea-ink)]">Documents</h2>
+            <p className="mt-1 text-sm text-[var(--sea-ink-soft)]">
+              Upload receipts, manuals, warranties, and more
+            </p>
+          </div>
+          <svg
+            className="h-6 w-6 text-[var(--sea-ink-soft)]"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </Link>
       </section>
 
       <section className="island-shell mt-8 rounded-2xl p-6">

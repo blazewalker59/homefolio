@@ -43,6 +43,13 @@
       "when": 1780515792449,
       "tag": "0005_tan_onslaught",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1780517344283,
+      "tag": "0006_glorious_invaders",
+      "breakpoints": true
     }
   ]
 }

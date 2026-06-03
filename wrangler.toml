@@ -2,5 +2,9 @@ name = "homefolio"
 compatibility_date = "2025-03-15"
 compatibility_flags = ["nodejs_compat"]
 
+[[r2_buckets]]
+binding = "DOCUMENTS_BUCKET"
+bucket_name = "homefolio-documents"
+
 [observability]
 enabled = true
