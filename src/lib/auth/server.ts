@@ -19,6 +19,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { getDb } from "@/db/client";
 import { getEnv } from "@/lib/env";
+import { getOrCreateHome } from "@/lib/home";
 import { deriveUsername } from "./username";
 
 async function requireEnv(name: string): Promise<string> {
@@ -110,6 +111,13 @@ export async function getAuth() {
                 avatarUrl: user.image ?? null,
               },
             };
+          },
+          // Auto-create the user's single Home on first sign-in. Runs
+          // after the user row has been committed. Idempotent — safe to
+          // call on every sign-in, though Better Auth only fires this
+          // once per user.
+          after: async (user) => {
+            await getOrCreateHome(user.id);
           },
         },
       },
