@@ -133,4 +133,23 @@ export const BUILT_IN_TEMPLATES: BuiltInTemplate[] = [
       { key: "nextChangeDue", label: "Next Change Due", type: "date" },
     ],
   },
+  {
+    name: "Other",
+    category: "other",
+    description: "Generic template for items that don't fit other categories",
+    fields: [
+      { key: "brand", label: "Brand", type: "text" },
+      { key: "model", label: "Model", type: "text" },
+      { key: "description", label: "Description", type: "text" },
+      { key: "purchaseDate", label: "Purchase Date", type: "date" },
+      { key: "purchasePrice", label: "Purchase Price", type: "number" },
+      {
+        key: "condition",
+        label: "Condition",
+        type: "select",
+        options: ["New", "Like New", "Good", "Fair", "Poor"],
+      },
+      { key: "notes", label: "Notes", type: "text" },
+    ],
+  },
 ];

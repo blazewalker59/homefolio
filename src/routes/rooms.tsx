@@ -2,11 +2,21 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { getHomeFn } from "@/server/home";
 import { listRoomsFn, createRoomFn, updateRoomFn, deleteRoomFn } from "@/server/room";
+import { seedTemplatesFn, listTemplatesFn, listItemsByRoomFn, createItemFn } from "@/server/item";
 import { ROOM_CATEGORIES, getRoomCategory } from "@/lib/room-categories";
-import { rooms } from "@/db/schema";
+import { ItemFormModal } from "@/components/ItemFormModal";
+import { rooms, itemTemplates, items } from "@/db/schema";
 import type { InferSelectModel } from "drizzle-orm";
 
 type Room = InferSelectModel<typeof rooms>;
+type Template = InferSelectModel<typeof itemTemplates>;
+type ItemWithTemplate = InferSelectModel<typeof items> & {
+  template?: Template;
+};
+
+interface RoomWithItems extends Room {
+  items: ItemWithTemplate[];
+}
 
 export const Route = createFileRoute("/rooms")({
   loader: async () => {
@@ -15,8 +25,19 @@ export const Route = createFileRoute("/rooms")({
       if (!home?.address) {
         throw redirect({ to: "/setup" });
       }
-      const rooms = await listRoomsFn();
-      return { home, rooms };
+      const roomsList = await listRoomsFn();
+
+      await seedTemplatesFn();
+      const templates = await listTemplatesFn();
+
+      const roomsWithItems: RoomWithItems[] = await Promise.all(
+        roomsList.map(async (room) => {
+          const roomItems = await listItemsByRoomFn({ data: { roomId: room.id } });
+          return { ...room, items: roomItems as ItemWithTemplate[] };
+        }),
+      );
+
+      return { home, rooms: roomsWithItems, templates };
     } catch (err) {
       if (err instanceof Error && err.message === "Not authenticated") {
         throw redirect({ to: "/sign-in" });
@@ -28,10 +49,11 @@ export const Route = createFileRoute("/rooms")({
 });
 
 function RoomsPage() {
-  const { home, rooms: initialRooms } = Route.useLoaderData();
+  const { home, rooms: initialRooms, templates } = Route.useLoaderData();
   const [rooms, setRooms] = useState(initialRooms);
   const [showCreate, setShowCreate] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+  const [addItemRoomId, setAddItemRoomId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -39,7 +61,7 @@ function RoomsPage() {
     setPending(true);
     try {
       const newRoom = await createRoomFn({ data });
-      setRooms((prev) => [...prev, newRoom]);
+      setRooms((prev) => [...prev, { ...newRoom, items: [] }]);
       setShowCreate(false);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to create room");
@@ -52,7 +74,7 @@ function RoomsPage() {
     setPending(true);
     try {
       const updated = await updateRoomFn({ data: { roomId, ...data } });
-      setRooms((prev) => prev.map((r) => (r.id === roomId ? updated : r)));
+      setRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, ...updated } : r)));
       setEditingRoom(null);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to update room");
@@ -73,6 +95,33 @@ function RoomsPage() {
       setPending(false);
     }
   }
+
+  async function handleCreateItem(data: {
+    templateId: string;
+    name: string;
+    roomId?: string;
+    systemUnitId?: string;
+    fields: Record<string, unknown>;
+  }) {
+    if (!addItemRoomId) return;
+    setPending(true);
+    try {
+      await createItemFn({ data: { ...data, roomId: addItemRoomId } });
+      const updatedItems = await listItemsByRoomFn({ data: { roomId: addItemRoomId } });
+      setRooms((prev) =>
+        prev.map((r) =>
+          r.id === addItemRoomId ? { ...r, items: updatedItems as ItemWithTemplate[] } : r,
+        ),
+      );
+      setAddItemRoomId(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to create item");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  const addItemRoom = rooms.find((r) => r.id === addItemRoomId);
 
   return (
     <main className="page-wrap px-4 pb-8 pt-14">
@@ -117,6 +166,7 @@ function RoomsPage() {
               room={room}
               onEdit={() => setEditingRoom(room)}
               onDelete={() => handleDelete(room.id)}
+              onAddItem={() => setAddItemRoomId(room.id)}
               pending={pending}
             />
           ))}
@@ -142,6 +192,17 @@ function RoomsPage() {
           pending={pending}
         />
       )}
+
+      {addItemRoom && (
+        <ItemFormModal
+          templates={templates}
+          title={`Add Item to ${addItemRoom.name}`}
+          defaultRoomId={addItemRoom.id}
+          onSubmit={handleCreateItem}
+          onCancel={() => setAddItemRoomId(null)}
+          pending={pending}
+        />
+      )}
     </main>
   );
 }
@@ -150,11 +211,13 @@ function RoomCard({
   room,
   onEdit,
   onDelete,
+  onAddItem,
   pending,
 }: {
-  room: Room;
+  room: RoomWithItems;
   onEdit: () => void;
   onDelete: () => void;
+  onAddItem: () => void;
   pending: boolean;
 }) {
   const category = getRoomCategory(room.category);
@@ -173,6 +236,34 @@ function RoomCard({
           {category?.label ?? room.category}
         </span>
       </div>
+
+      {room.items.length > 0 && (
+        <div className="mt-3 space-y-1.5 border-t border-[var(--line)] pt-3">
+          <p className="text-xs font-medium text-[var(--sea-ink-soft)]">
+            {room.items.length} {room.items.length === 1 ? "item" : "items"}
+          </p>
+          {room.items.map((item) => (
+            <div
+              key={item.id}
+              className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-1.5"
+            >
+              <span className="text-sm text-[var(--sea-ink)]">{item.name}</span>
+              {item.template && (
+                <span className="text-xs text-[var(--sea-ink-soft)]">{item.template.category}</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <button
+        onClick={onAddItem}
+        disabled={pending}
+        className="mt-3 w-full rounded-lg border border-dashed border-[var(--line)] bg-transparent px-3 py-2 text-xs font-medium text-[var(--sea-ink-soft)] transition hover:border-[var(--lagoon-deep)] hover:text-[var(--lagoon-deep)] disabled:opacity-50"
+      >
+        + Add Item
+      </button>
+
       <div className="flex gap-2 pt-2">
         <button
           onClick={onEdit}

@@ -17,7 +17,8 @@ import type { TemplateField } from "@/db/schema";
  * Seed built-in templates into the database.
  *
  * Called on first run to populate the item_templates table. Idempotent —
- * checks if templates already exist before inserting.
+ * checks each built-in template by category and only inserts ones that
+ * don't already exist, so new templates can be added over time.
  */
 export async function seedBuiltInTemplates(
   templates: Array<{
@@ -29,27 +30,23 @@ export async function seedBuiltInTemplates(
 ) {
   const db = await getDb();
 
-  // Check if any built-in templates exist.
-  const existing = await db
-    .select()
-    .from(itemTemplates)
-    .where(eq(itemTemplates.isBuiltIn, true))
-    .limit(1);
+  for (const template of templates) {
+    const existing = await db
+      .select()
+      .from(itemTemplates)
+      .where(eq(itemTemplates.category, template.category))
+      .limit(1);
 
-  if (existing.length > 0) {
-    return; // Already seeded.
+    if (existing.length === 0) {
+      await db.insert(itemTemplates).values({
+        name: template.name,
+        category: template.category,
+        description: template.description,
+        fields: template.fields,
+        isBuiltIn: true,
+      });
+    }
   }
-
-  // Insert all built-in templates.
-  await db.insert(itemTemplates).values(
-    templates.map((t) => ({
-      name: t.name,
-      category: t.category,
-      description: t.description,
-      fields: t.fields,
-      isBuiltIn: true,
-    })),
-  );
 }
 
 /**
