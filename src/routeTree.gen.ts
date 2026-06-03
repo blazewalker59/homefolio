@@ -13,6 +13,7 @@ import { Route as SystemsRouteImport } from './routes/systems'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SetupRouteImport } from './routes/setup'
 import { Route as RoomsRouteImport } from './routes/rooms'
+import { Route as ItemsRouteImport } from './routes/items'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -36,6 +37,11 @@ const RoomsRoute = RoomsRouteImport.update({
   path: '/rooms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ItemsRoute = ItemsRouteImport.update({
+  id: '/items',
+  path: '/items',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
@@ -50,6 +56,7 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/items': typeof ItemsRoute
   '/rooms': typeof RoomsRoute
   '/setup': typeof SetupRoute
   '/sign-in': typeof SignInRoute
@@ -58,6 +65,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/items': typeof ItemsRoute
   '/rooms': typeof RoomsRoute
   '/setup': typeof SetupRoute
   '/sign-in': typeof SignInRoute
@@ -67,6 +75,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/items': typeof ItemsRoute
   '/rooms': typeof RoomsRoute
   '/setup': typeof SetupRoute
   '/sign-in': typeof SignInRoute
@@ -74,13 +83,21 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/rooms' | '/setup' | '/sign-in' | '/systems'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/items'
+    | '/rooms'
+    | '/setup'
+    | '/sign-in'
+    | '/systems'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/rooms' | '/setup' | '/sign-in' | '/systems'
+  to: '/' | '/about' | '/items' | '/rooms' | '/setup' | '/sign-in' | '/systems'
   id:
     | '__root__'
     | '/'
     | '/about'
+    | '/items'
     | '/rooms'
     | '/setup'
     | '/sign-in'
@@ -90,6 +107,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  ItemsRoute: typeof ItemsRoute
   RoomsRoute: typeof RoomsRoute
   SetupRoute: typeof SetupRoute
   SignInRoute: typeof SignInRoute
@@ -126,6 +144,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RoomsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/items': {
+      id: '/items'
+      path: '/items'
+      fullPath: '/items'
+      preLoaderRoute: typeof ItemsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/about': {
       id: '/about'
       path: '/about'
@@ -146,6 +171,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  ItemsRoute: ItemsRoute,
   RoomsRoute: RoomsRoute,
   SetupRoute: SetupRoute,
   SignInRoute: SignInRoute,
