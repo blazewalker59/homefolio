@@ -47,3 +47,32 @@ export async function getHome(userId: string) {
     where: eq(homes.userId, userId),
   });
 }
+
+/**
+ * Update a home's details.
+ *
+ * Accepts partial updates — only the provided fields are changed. The
+ * `updatedAt` timestamp is automatically set to now.
+ */
+export async function updateHome(
+  homeId: string,
+  updates: {
+    name?: string | null;
+    address?: string | null;
+    yearBuilt?: number | null;
+    sqft?: number | null;
+    lotSize?: string | null;
+    bedCount?: number | null;
+    bathCount?: number | null;
+    purchasePrice?: string | null;
+    purchaseDate?: Date | null;
+  },
+) {
+  const db = await getDb();
+  const [updated] = await db
+    .update(homes)
+    .set({ ...updates, updatedAt: new Date() })
+    .where(eq(homes.id, homeId))
+    .returning();
+  return updated;
+}
