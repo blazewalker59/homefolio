@@ -63,6 +63,32 @@ function ActivitiesPage() {
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
 
+  // Filter state
+  const [typeFilter, setTypeFilter] = useState<string>("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+
+  // Filter activities
+  const filteredActivities = activities.filter((activity) => {
+    // Type filter
+    if (typeFilter && activity.type !== typeFilter) return false;
+
+    // Date range filter
+    if (dateFrom) {
+      const activityDate = new Date(activity.timestamp);
+      const fromDate = new Date(dateFrom);
+      if (activityDate < fromDate) return false;
+    }
+    if (dateTo) {
+      const activityDate = new Date(activity.timestamp);
+      const toDate = new Date(dateTo);
+      toDate.setHours(23, 59, 59, 999); // End of day
+      if (activityDate > toDate) return false;
+    }
+
+    return true;
+  });
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
@@ -256,15 +282,82 @@ function ActivitiesPage() {
       <section className="mt-8">
         <h2 className="mb-4 text-xl font-bold text-[var(--sea-ink)]">Timeline</h2>
 
-        {activities.length === 0 ? (
+        {/* Filters */}
+        <div className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] p-4">
+          <div className="flex items-center gap-2">
+            <label htmlFor="type-filter" className="text-sm font-medium text-[var(--sea-ink-soft)]">
+              Type:
+            </label>
+            <select
+              id="type-filter"
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="rounded-sm border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-1.5 text-sm text-[var(--sea-ink)] focus:border-[var(--lagoon-deep)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
+            >
+              <option value="">All types</option>
+              {ACTIVITY_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {ACTIVITY_TYPE_LABELS[type]}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label htmlFor="date-from" className="text-sm font-medium text-[var(--sea-ink-soft)]">
+              From:
+            </label>
+            <input
+              id="date-from"
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="rounded-sm border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-1.5 text-sm text-[var(--sea-ink)] focus:border-[var(--lagoon-deep)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label htmlFor="date-to" className="text-sm font-medium text-[var(--sea-ink-soft)]">
+              To:
+            </label>
+            <input
+              id="date-to"
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="rounded-sm border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-1.5 text-sm text-[var(--sea-ink)] focus:border-[var(--lagoon-deep)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
+            />
+          </div>
+
+          {(typeFilter || dateFrom || dateTo) && (
+            <button
+              onClick={() => {
+                setTypeFilter("");
+                setDateFrom("");
+                setDateTo("");
+              }}
+              className="rounded-sm border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-1.5 text-sm font-medium text-[var(--sea-ink)] transition hover:border-[var(--lagoon-deep)] hover:text-[var(--lagoon-deep)]"
+            >
+              Clear filters
+            </button>
+          )}
+
+          <span className="ml-auto text-xs text-[var(--sea-ink-soft)]">
+            {filteredActivities.length} of {activities.length} activities
+          </span>
+        </div>
+
+        {filteredActivities.length === 0 ? (
           <div className="island-shell rounded-2xl p-8 text-center">
             <p className="text-sm text-[var(--sea-ink-soft)]">
-              No activities yet. Log your first activity or add items to auto-generate entries.
+              {activities.length === 0
+                ? "No activities yet. Log your first activity or add items to auto-generate entries."
+                : "No activities match your filters."}
             </p>
           </div>
         ) : (
           <div className="relative border-l-2 border-[var(--line)] pl-6">
-            {activities.map((activity) => (
+            {filteredActivities.map((activity) => (
               <div key={activity.id} className="relative mb-6 last:mb-0">
                 <div className="absolute -left-[31px] top-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-[var(--line)] bg-[var(--surface-strong)] text-xs">
                   {ACTIVITY_TYPE_ICONS[activity.type] || "📝"}

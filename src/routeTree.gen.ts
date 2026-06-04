@@ -13,6 +13,7 @@ import { Route as TemplatesRouteImport } from './routes/templates'
 import { Route as SystemsRouteImport } from './routes/systems'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SetupRouteImport } from './routes/setup'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as ItemsRouteImport } from './routes/items'
 import { Route as DocumentsRouteImport } from './routes/documents'
@@ -38,6 +39,11 @@ const SignInRoute = SignInRouteImport.update({
 const SetupRoute = SetupRouteImport.update({
   id: '/setup',
   path: '/setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RoomsRoute = RoomsRouteImport.update({
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/documents': typeof DocumentsRoute
   '/items': typeof ItemsRoute
   '/rooms': typeof RoomsRoute
+  '/search': typeof SearchRoute
   '/setup': typeof SetupRoute
   '/sign-in': typeof SignInRoute
   '/systems': typeof SystemsRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/documents': typeof DocumentsRoute
   '/items': typeof ItemsRoute
   '/rooms': typeof RoomsRoute
+  '/search': typeof SearchRoute
   '/setup': typeof SetupRoute
   '/sign-in': typeof SignInRoute
   '/systems': typeof SystemsRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/documents': typeof DocumentsRoute
   '/items': typeof ItemsRoute
   '/rooms': typeof RoomsRoute
+  '/search': typeof SearchRoute
   '/setup': typeof SetupRoute
   '/sign-in': typeof SignInRoute
   '/systems': typeof SystemsRoute
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/documents'
     | '/items'
     | '/rooms'
+    | '/search'
     | '/setup'
     | '/sign-in'
     | '/systems'
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/documents'
     | '/items'
     | '/rooms'
+    | '/search'
     | '/setup'
     | '/sign-in'
     | '/systems'
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '/documents'
     | '/items'
     | '/rooms'
+    | '/search'
     | '/setup'
     | '/sign-in'
     | '/systems'
@@ -154,6 +166,7 @@ export interface RootRouteChildren {
   DocumentsRoute: typeof DocumentsRoute
   ItemsRoute: typeof ItemsRoute
   RoomsRoute: typeof RoomsRoute
+  SearchRoute: typeof SearchRoute
   SetupRoute: typeof SetupRoute
   SignInRoute: typeof SignInRoute
   SystemsRoute: typeof SystemsRoute
@@ -188,6 +201,13 @@ declare module '@tanstack/react-router' {
       path: '/setup'
       fullPath: '/setup'
       preLoaderRoute: typeof SetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rooms': {
@@ -242,6 +262,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocumentsRoute: DocumentsRoute,
   ItemsRoute: ItemsRoute,
   RoomsRoute: RoomsRoute,
+  SearchRoute: SearchRoute,
   SetupRoute: SetupRoute,
   SignInRoute: SignInRoute,
   SystemsRoute: SystemsRoute,

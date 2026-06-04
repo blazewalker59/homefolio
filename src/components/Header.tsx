@@ -29,13 +29,23 @@ export default function Header() {
 
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
           {status === "authenticated" && (
-            <button
-              type="button"
-              onClick={() => signOut()}
-              className="rounded-sm px-3 py-1.5 text-sm font-medium text-[var(--sea-ink-soft)] transition hover:bg-[var(--link-bg-hover)] hover:text-[var(--sea-ink)]"
-            >
-              Sign out
-            </button>
+            <>
+              <Link
+                to="/search"
+                search={{ q: "" }}
+                className="rounded-sm px-3 py-1.5 text-sm font-medium text-[var(--sea-ink-soft)] no-underline transition hover:bg-[var(--link-bg-hover)] hover:text-[var(--sea-ink)]"
+                aria-label="Search"
+              >
+                🔍
+              </Link>
+              <button
+                type="button"
+                onClick={() => signOut()}
+                className="rounded-sm px-3 py-1.5 text-sm font-medium text-[var(--sea-ink-soft)] transition hover:bg-[var(--link-bg-hover)] hover:text-[var(--sea-ink)]"
+              >
+                Sign out
+              </button>
+            </>
           )}
           {status === "anonymous" && (
             <Link
