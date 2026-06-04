@@ -22,7 +22,7 @@ export const Route = createFileRoute("/")({
 
 type Section = {
   number: string;
-  to: "/rooms" | "/systems" | "/items" | "/documents";
+  to: "/rooms" | "/systems" | "/items" | "/documents" | "/activities";
   title: string;
   blurb: string;
 };
@@ -51,6 +51,12 @@ const SECTIONS: Section[] = [
     to: "/documents",
     title: "Documents",
     blurb: "Receipts, manuals, warranties. The paper trail, properly filed.",
+  },
+  {
+    number: "05",
+    to: "/activities",
+    title: "Activities",
+    blurb: "A running record of everything that happens in your home.",
   },
 ];
 
@@ -111,7 +117,7 @@ function Dashboard() {
       <section className="rise-in mt-12">
         <div className="mb-6 flex items-baseline justify-between">
           <p className="island-kicker">Contents</p>
-          <span className="font-mono text-xs text-[var(--sea-ink-soft)]">04 sections</span>
+          <span className="font-mono text-xs text-[var(--sea-ink-soft)]">05 sections</span>
         </div>
 
         <ol className="m-0 list-none divide-y divide-[var(--line)] border-y border-[var(--line)] p-0">
@@ -180,6 +186,13 @@ function Dashboard() {
               className="text-[var(--lagoon-deep)] underline-offset-4 hover:no-underline"
             >
               Catalogue items
+            </Link>
+            <span className="text-[var(--sea-ink-soft)]">·</span>
+            <Link
+              to="/activities"
+              className="text-[var(--lagoon-deep)] underline-offset-4 hover:no-underline"
+            >
+              View activities
             </Link>
           </div>
         </div>

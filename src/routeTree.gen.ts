@@ -16,6 +16,7 @@ import { Route as SetupRouteImport } from './routes/setup'
 import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as ItemsRouteImport } from './routes/items'
 import { Route as DocumentsRouteImport } from './routes/documents'
+import { Route as ActivitiesRouteImport } from './routes/activities'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -54,6 +55,11 @@ const DocumentsRoute = DocumentsRouteImport.update({
   path: '/documents',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ActivitiesRoute = ActivitiesRouteImport.update({
+  id: '/activities',
+  path: '/activities',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
@@ -68,6 +74,7 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/activities': typeof ActivitiesRoute
   '/documents': typeof DocumentsRoute
   '/items': typeof ItemsRoute
   '/rooms': typeof RoomsRoute
@@ -79,6 +86,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/activities': typeof ActivitiesRoute
   '/documents': typeof DocumentsRoute
   '/items': typeof ItemsRoute
   '/rooms': typeof RoomsRoute
@@ -91,6 +99,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/activities': typeof ActivitiesRoute
   '/documents': typeof DocumentsRoute
   '/items': typeof ItemsRoute
   '/rooms': typeof RoomsRoute
@@ -104,6 +113,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/activities'
     | '/documents'
     | '/items'
     | '/rooms'
@@ -115,6 +125,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/activities'
     | '/documents'
     | '/items'
     | '/rooms'
@@ -126,6 +137,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
+    | '/activities'
     | '/documents'
     | '/items'
     | '/rooms'
@@ -138,6 +150,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  ActivitiesRoute: typeof ActivitiesRoute
   DocumentsRoute: typeof DocumentsRoute
   ItemsRoute: typeof ItemsRoute
   RoomsRoute: typeof RoomsRoute
@@ -198,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocumentsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/activities': {
+      id: '/activities'
+      path: '/activities'
+      fullPath: '/activities'
+      preLoaderRoute: typeof ActivitiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/about': {
       id: '/about'
       path: '/about'
@@ -218,6 +238,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  ActivitiesRoute: ActivitiesRoute,
   DocumentsRoute: DocumentsRoute,
   ItemsRoute: ItemsRoute,
   RoomsRoute: RoomsRoute,

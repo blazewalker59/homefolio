@@ -226,6 +226,7 @@ export const createItemFn = createServerFn({ method: "POST" })
       roomId: data.roomId ?? undefined,
       systemUnitId: data.systemUnitId ?? undefined,
       fields: data.fields as Record<string, unknown>,
+      createdBy: user.id,
     });
     return item as typeof item & { fields: SerializableFields };
   });
@@ -287,13 +288,13 @@ const moveItemSchema = z.object({
 export const moveItemFn = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) => moveItemSchema.parse(raw))
   .handler(async ({ data }) => {
-    await requireSessionUser();
+    const user = await requireSessionUser();
 
     // Verify the item exists.
     const item = await getItem(data.itemId);
     if (!item) throw new Error("Item not found");
 
-    const moved = await moveItem(data.itemId, data.roomId);
+    const moved = await moveItem(data.itemId, data.roomId, user.id);
     return moved as typeof moved & { fields: SerializableFields };
   });
 
