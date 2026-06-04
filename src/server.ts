@@ -18,8 +18,6 @@
  */
 
 import { createStartHandler, defaultStreamHandler } from "@tanstack/react-start/server";
-import type { Register } from "@tanstack/react-router";
-import type { RequestHandler } from "@tanstack/react-start/server";
 import type { R2Bucket } from "@cloudflare/workers-types";
 import { getAuth } from "@/lib/auth/server";
 import { initStorageProvider } from "@/lib/storage";
@@ -34,9 +32,17 @@ function isAuthRequest(request: Request): boolean {
   return pathname === "/api/auth" || pathname.startsWith("/api/auth/");
 }
 
-async function fetch(...args: Parameters<RequestHandler<Register>>) {
-  const request = args[0];
-  const env = args[1] as { DOCUMENTS_BUCKET?: R2Bucket } | undefined;
+// Store env at module level for access in server functions
+let cloudflareEnv: { DOCUMENTS_BUCKET?: R2Bucket } | null = null;
+
+export function getCloudflareEnv() {
+  return cloudflareEnv;
+}
+
+// Cloudflare Workers fetch handler signature: (request, env, ctx)
+async function fetch(request: Request, env: { DOCUMENTS_BUCKET?: R2Bucket }) {
+  // Store env for access in server functions
+  cloudflareEnv = env;
 
   // Initialize storage provider if R2 bucket is available
   if (env?.DOCUMENTS_BUCKET) {
@@ -47,9 +53,9 @@ async function fetch(...args: Parameters<RequestHandler<Register>>) {
     const auth = await getAuth();
     return auth.handler(request);
   }
-  return startFetch(...args);
+  return startFetch(request);
 }
 
-export type ServerEntry = { fetch: RequestHandler<Register> };
+export type ServerEntry = { fetch: typeof fetch };
 
 export default { fetch } satisfies ServerEntry;
