@@ -104,26 +104,29 @@ function TemplatesPage() {
 
   return (
     <main className="page-wrap px-4 pb-8 pt-14">
-      <section className="island-shell rise-in relative overflow-hidden rounded-[2rem] px-6 py-10 sm:px-10 sm:py-14">
-        <div className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(79,184,178,0.32),transparent_66%)]" />
-        <p className="island-kicker mb-3">Custom Templates</p>
-        <h1 className="display-title mb-5 max-w-3xl text-4xl leading-[1.02] font-bold tracking-tight text-[var(--sea-ink)] sm:text-6xl">
-          {home.name || "My Home"}
+      <section className="rise-in border-b border-[var(--line)] pb-10 sm:pb-12">
+        <div className="mb-6 flex items-center justify-between text-[0.66rem] font-semibold uppercase tracking-[0.22em] text-[var(--sea-ink-soft)]">
+          <span>{home.name || "My Home"}</span>
+          <span className="font-mono text-[var(--lagoon-deep)]">Appendix</span>
+        </div>
+        <p className="island-kicker mb-4">Custom typography</p>
+        <h1 className="display-title mb-5 max-w-3xl text-5xl text-[var(--sea-ink)] sm:text-7xl">
+          Templates<span className="text-[var(--lagoon-deep)]">.</span>
         </h1>
-        <p className="mb-8 max-w-2xl text-base text-[var(--sea-ink-soft)] sm:text-lg">
-          Create your own item templates for things not covered by built-in defaults.
+        <p className="mb-8 max-w-2xl font-serif text-lg italic text-[var(--sea-ink-soft)] sm:text-xl">
+          Bespoke item templates for things not covered by the built-in catalogue.
         </p>
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button
             onClick={() => setShowCreate(true)}
-            className="rounded-full bg-[var(--lagoon-deep)] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            className="rounded-sm bg-[var(--lagoon-deep)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--on-accent)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
           >
             Create Template
           </button>
           <Link
             to="/items"
-            className="rounded-full border border-[var(--line)] bg-white px-6 py-3 text-sm font-semibold text-[var(--sea-ink)] transition hover:bg-gray-50"
+            className="rounded-sm border border-[var(--line)] bg-[var(--surface-strong)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--sea-ink)] transition hover:border-[var(--lagoon-deep)] hover:text-[var(--lagoon-deep)]"
           >
             Back to Items
           </Link>
@@ -131,7 +134,7 @@ function TemplatesPage() {
       </section>
 
       {deleteError && (
-        <div className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <div className="mt-6 rounded-lg border border-[var(--danger-border)] bg-[var(--danger-bg)] px-4 py-3 text-sm text-[var(--danger-fg)]">
           {deleteError}
           <button onClick={() => setDeleteError(null)} className="ml-2 font-semibold underline">
             Dismiss
@@ -221,13 +224,13 @@ function TemplateCard({
           {fields.slice(0, 5).map((field) => (
             <span
               key={field.key}
-              className="rounded bg-gray-100 px-2 py-0.5 text-xs text-[var(--sea-ink)]"
+              className="rounded bg-[var(--chip-bg)] px-2 py-0.5 text-xs text-[var(--sea-ink)]"
             >
               {field.label}
             </span>
           ))}
           {fields.length > 5 && (
-            <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-[var(--sea-ink-soft)]">
+            <span className="rounded bg-[var(--chip-bg)] px-2 py-0.5 text-xs text-[var(--sea-ink-soft)]">
               +{fields.length - 5} more
             </span>
           )}
@@ -238,14 +241,14 @@ function TemplateCard({
         <button
           onClick={onEdit}
           disabled={pending}
-          className="flex-1 rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-xs font-medium text-[var(--sea-ink)] transition hover:bg-gray-50 disabled:opacity-50"
+          className="flex-1 rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-2 text-xs font-medium text-[var(--sea-ink)] transition hover:bg-[var(--link-bg-hover)] disabled:opacity-50"
         >
           Edit
         </button>
         <button
           onClick={onDelete}
           disabled={pending}
-          className="flex-1 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+          className="flex-1 rounded-lg border border-[var(--danger-border)] bg-[var(--surface-strong)] px-3 py-2 text-xs font-medium text-[var(--danger-fg)] transition hover:bg-[var(--danger-bg)] disabled:opacity-50"
         >
           Delete
         </button>
@@ -323,7 +326,7 @@ function TemplateFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-[var(--line)] bg-white p-6 shadow-lg">
+      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-[var(--line)] bg-[var(--surface-strong)] p-6 shadow-lg">
         <h2 className="mb-4 text-xl font-bold text-[var(--sea-ink)]">{title}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -336,7 +339,7 @@ function TemplateFormModal({
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Appliance, Tool, Plant"
               required
-              className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm"
+              className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm"
             />
           </div>
 
@@ -348,7 +351,7 @@ function TemplateFormModal({
               onChange={(e) => setCategory(e.target.value)}
               placeholder="e.g., appliance, tool, plant"
               required
-              className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm"
+              className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm"
             />
           </div>
 
@@ -361,7 +364,7 @@ function TemplateFormModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What is this template for?"
-              className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm"
+              className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm"
             />
           </div>
 
@@ -395,14 +398,14 @@ function TemplateFormModal({
               type="button"
               onClick={onCancel}
               disabled={pending}
-              className="flex-1 rounded-full border border-[var(--line)] bg-white px-6 py-3 text-sm font-semibold text-[var(--sea-ink)] transition hover:bg-gray-50 disabled:opacity-50"
+              className="flex-1 rounded-full border border-[var(--line)] bg-[var(--surface-strong)] px-6 py-3 text-sm font-semibold text-[var(--sea-ink)] transition hover:bg-[var(--link-bg-hover)] disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={pending || !name.trim() || !category.trim()}
-              className="flex-1 rounded-full bg-[var(--lagoon-deep)] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+              className="flex-1 rounded-full bg-[var(--lagoon-deep)] px-6 py-3 text-sm font-semibold text-[var(--on-accent)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
             >
               {pending ? "Saving…" : title === "Create Template" ? "Create" : "Save Changes"}
             </button>
@@ -436,21 +439,21 @@ function FieldEditor({
   }
 
   return (
-    <div className="rounded-lg border border-[var(--line)] bg-gray-50 p-3">
+    <div className="rounded-lg border border-[var(--line)] bg-[var(--link-bg-hover)] p-3">
       <div className="mb-2 grid grid-cols-2 gap-2">
         <input
           type="text"
           value={field.key}
           onChange={(e) => onChange({ key: e.target.value })}
           placeholder="Field key (e.g., brand)"
-          className="rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm"
+          className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-2 text-sm"
         />
         <input
           type="text"
           value={field.label}
           onChange={(e) => onChange({ label: e.target.value })}
           placeholder="Field label (e.g., Brand)"
-          className="rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm"
+          className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-2 text-sm"
         />
       </div>
 
@@ -458,7 +461,7 @@ function FieldEditor({
         <select
           value={field.type}
           onChange={(e) => onChange({ type: e.target.value as FieldType })}
-          className="rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm"
+          className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-2 text-sm"
         >
           <option value="text">Text</option>
           <option value="number">Number</option>
@@ -481,7 +484,7 @@ function FieldEditor({
           <button
             type="button"
             onClick={onRemove}
-            className="ml-auto rounded px-2 py-1 text-xs text-red-500 transition hover:bg-red-100"
+            className="ml-auto rounded px-2 py-1 text-xs text-[var(--danger-fg)] transition hover:bg-[var(--danger-bg-hover)]"
           >
             Remove
           </button>
@@ -494,7 +497,7 @@ function FieldEditor({
           value={optionsText}
           onChange={(e) => handleOptionsChange(e.target.value)}
           placeholder="Options (comma-separated, e.g., Red, Green, Blue)"
-          className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-2 text-sm"
         />
       )}
     </div>

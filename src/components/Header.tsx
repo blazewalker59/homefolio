@@ -6,24 +6,33 @@ export default function Header() {
   const { status } = useAuth();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[var(--line)] bg-[var(--header-bg)] px-4 backdrop-blur-lg">
-      <nav className="page-wrap flex flex-wrap items-center gap-x-3 gap-y-2 py-3 sm:py-4">
-        <h2 className="m-0 flex-shrink-0 text-base font-semibold tracking-tight">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 rounded-full border border-[var(--chip-line)] bg-[var(--chip-bg)] px-3 py-1.5 text-sm text-[var(--sea-ink)] no-underline shadow-[0_8px_24px_rgba(30,90,72,0.08)] sm:px-4 sm:py-2"
-          >
-            <span className="h-2 w-2 rounded-full bg-[linear-gradient(90deg,#56c6be,#7ed3bf)]" />
-            Homefolio
-          </Link>
-        </h2>
+    <header className="sticky top-0 z-50 border-b border-[var(--line)] bg-[var(--header-bg)] backdrop-blur-lg">
+      <div className="page-wrap flex flex-wrap items-center gap-x-4 gap-y-2 py-3 sm:py-4">
+        <Link
+          to="/"
+          className="group flex items-center gap-3 no-underline"
+          aria-label="Homefolio — home"
+        >
+          {/* Monogram H plate — flat brass square, magazine masthead style. */}
+          <span className="grid h-9 w-9 place-items-center rounded-sm border border-[var(--line)] bg-[var(--surface-strong)] font-serif text-base font-bold tracking-tight text-[var(--lagoon-deep)] transition group-hover:border-[var(--lagoon-deep)] group-hover:bg-[var(--lagoon-deep)] group-hover:text-[var(--on-accent)]">
+            H
+          </span>
+          <span className="flex flex-col leading-none">
+            <span className="text-[0.6rem] font-semibold uppercase tracking-[0.22em] text-[var(--sea-ink-soft)]">
+              Vol.&nbsp;I
+            </span>
+            <span className="font-serif text-lg font-bold tracking-tight text-[var(--sea-ink)]">
+              Homefolio
+            </span>
+          </span>
+        </Link>
 
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
           {status === "authenticated" && (
             <button
               type="button"
               onClick={() => signOut()}
-              className="rounded-xl px-3 py-1.5 text-sm font-medium text-[var(--sea-ink-soft)] transition hover:bg-[var(--link-bg-hover)] hover:text-[var(--sea-ink)]"
+              className="rounded-sm px-3 py-1.5 text-sm font-medium text-[var(--sea-ink-soft)] transition hover:bg-[var(--link-bg-hover)] hover:text-[var(--sea-ink)]"
             >
               Sign out
             </button>
@@ -31,14 +40,14 @@ export default function Header() {
           {status === "anonymous" && (
             <Link
               to="/sign-in"
-              className="rounded-xl px-3 py-1.5 text-sm font-medium text-[var(--sea-ink-soft)] no-underline transition hover:bg-[var(--link-bg-hover)] hover:text-[var(--sea-ink)]"
+              className="rounded-sm px-3 py-1.5 text-sm font-medium text-[var(--sea-ink-soft)] no-underline transition hover:bg-[var(--link-bg-hover)] hover:text-[var(--sea-ink)]"
             >
               Sign in
             </Link>
           )}
           <ThemeToggle />
         </div>
-      </nav>
+      </div>
     </header>
   );
 }

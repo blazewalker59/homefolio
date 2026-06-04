@@ -66,13 +66,14 @@ function SetupPage() {
   }
 
   return (
-    <main className="page-wrap flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-10">
-      <section className="w-full max-w-2xl rounded-2xl border border-[var(--line)] bg-white/60 p-8 shadow-sm backdrop-blur">
-        <h1 className="mb-2 text-3xl font-bold tracking-tight text-[var(--sea-ink)]">
-          Set up your home
+    <main className="page-wrap flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
+      <section className="w-full max-w-2xl border-t-2 border-[var(--lagoon-deep)] bg-[var(--surface-strong)] px-7 py-9 shadow-[0_24px_60px_-40px_rgba(26,24,20,0.4)] backdrop-blur sm:px-10 sm:py-12">
+        <p className="island-kicker mb-3">Issue No. 001</p>
+        <h1 className="display-title mb-3 text-4xl text-[var(--sea-ink)] sm:text-5xl">
+          Open the file<span className="text-[var(--lagoon-deep)]">.</span>
         </h1>
-        <p className="mb-8 text-sm text-[var(--sea-ink-soft)]">
-          Tell us about your home. You can update these details later.
+        <p className="mb-8 max-w-xl font-serif text-base italic text-[var(--sea-ink-soft)] sm:text-lg">
+          A few details about the property. You can revise everything later.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -81,7 +82,7 @@ function SetupPage() {
               htmlFor="address"
               className="mb-2 block text-sm font-medium text-[var(--sea-ink)]"
             >
-              Address <span className="text-red-500">*</span>
+              Address <span className="text-[var(--danger-fg)]">*</span>
             </label>
             <input
               type="text"
@@ -89,7 +90,7 @@ function SetupPage() {
               name="address"
               required
               placeholder="123 Main St, City, State"
-              className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm text-[var(--sea-ink)] placeholder:text-[var(--sea-ink-soft)] focus:border-[var(--lagoon-deep)] focus:outline-none focus:ring-2 focus:ring-[rgba(79,184,178,0.2)]"
+              className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm text-[var(--sea-ink)] placeholder:text-[var(--sea-ink-soft)] focus:border-[var(--lagoon-deep)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
             />
           </div>
 
@@ -102,7 +103,7 @@ function SetupPage() {
               id="name"
               name="name"
               placeholder="My Home"
-              className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm text-[var(--sea-ink)] placeholder:text-[var(--sea-ink-soft)] focus:border-[var(--lagoon-deep)] focus:outline-none focus:ring-2 focus:ring-[rgba(79,184,178,0.2)]"
+              className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm text-[var(--sea-ink)] placeholder:text-[var(--sea-ink-soft)] focus:border-[var(--lagoon-deep)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
             />
           </div>
 
@@ -121,7 +122,7 @@ function SetupPage() {
                 placeholder="1990"
                 min="1800"
                 max="2100"
-                className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm text-[var(--sea-ink)] placeholder:text-[var(--sea-ink-soft)] focus:border-[var(--lagoon-deep)] focus:outline-none focus:ring-2 focus:ring-[rgba(79,184,178,0.2)]"
+                className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm text-[var(--sea-ink)] placeholder:text-[var(--sea-ink-soft)] focus:border-[var(--lagoon-deep)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
               />
             </div>
 
@@ -138,7 +139,7 @@ function SetupPage() {
                 name="sqft"
                 placeholder="2000"
                 min="0"
-                className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm text-[var(--sea-ink)] placeholder:text-[var(--sea-ink-soft)] focus:border-[var(--lagoon-deep)] focus:outline-none focus:ring-2 focus:ring-[rgba(79,184,178,0.2)]"
+                className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm text-[var(--sea-ink)] placeholder:text-[var(--sea-ink-soft)] focus:border-[var(--lagoon-deep)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
               />
             </div>
           </div>
@@ -157,7 +158,7 @@ function SetupPage() {
                 name="bedCount"
                 placeholder="3"
                 min="0"
-                className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm text-[var(--sea-ink)] placeholder:text-[var(--sea-ink-soft)] focus:border-[var(--lagoon-deep)] focus:outline-none focus:ring-2 focus:ring-[rgba(79,184,178,0.2)]"
+                className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm text-[var(--sea-ink)] placeholder:text-[var(--sea-ink-soft)] focus:border-[var(--lagoon-deep)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
               />
             </div>
 
@@ -175,13 +176,13 @@ function SetupPage() {
                 placeholder="2"
                 min="0"
                 step="0.5"
-                className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm text-[var(--sea-ink)] placeholder:text-[var(--sea-ink-soft)] focus:border-[var(--lagoon-deep)] focus:outline-none focus:ring-2 focus:ring-[rgba(79,184,178,0.2)]"
+                className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm text-[var(--sea-ink)] placeholder:text-[var(--sea-ink-soft)] focus:border-[var(--lagoon-deep)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
               />
             </div>
           </div>
 
           {error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            <div className="rounded-lg border border-[var(--danger-border)] bg-[var(--danger-bg)] px-4 py-3 text-sm text-[var(--danger-fg)]">
               {error}
             </div>
           )}
@@ -190,7 +191,7 @@ function SetupPage() {
             <button
               type="submit"
               disabled={pending}
-              className="flex-1 rounded-full bg-[var(--lagoon-deep)] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+              className="flex-1 rounded-full bg-[var(--lagoon-deep)] px-6 py-3 text-sm font-semibold text-[var(--on-accent)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
             >
               {pending ? "Saving…" : "Save and continue"}
             </button>

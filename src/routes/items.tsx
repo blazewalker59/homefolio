@@ -160,32 +160,35 @@ function ItemsPage() {
 
   return (
     <main className="page-wrap px-4 pb-8 pt-14">
-      <section className="island-shell rise-in relative overflow-hidden rounded-[2rem] px-6 py-10 sm:px-10 sm:py-14">
-        <div className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(79,184,178,0.32),transparent_66%)]" />
-        <p className="island-kicker mb-3">Items</p>
-        <h1 className="display-title mb-5 max-w-3xl text-4xl leading-[1.02] font-bold tracking-tight text-[var(--sea-ink)] sm:text-6xl">
-          {home.name || "My Home"}
+      <section className="rise-in border-b border-[var(--line)] pb-10 sm:pb-12">
+        <div className="mb-6 flex items-center justify-between text-[0.66rem] font-semibold uppercase tracking-[0.22em] text-[var(--sea-ink-soft)]">
+          <span>{home.name || "My Home"}</span>
+          <span className="font-mono text-[var(--lagoon-deep)]">No. 003</span>
+        </div>
+        <p className="island-kicker mb-4">The catalogue</p>
+        <h1 className="display-title mb-5 max-w-3xl text-5xl text-[var(--sea-ink)] sm:text-7xl">
+          Items<span className="text-[var(--lagoon-deep)]">.</span>
         </h1>
-        <p className="mb-8 max-w-2xl text-base text-[var(--sea-ink-soft)] sm:text-lg">
+        <p className="mb-8 max-w-2xl font-serif text-lg italic text-[var(--sea-ink-soft)] sm:text-xl">
           {home.address}
         </p>
 
         <div className="flex flex-wrap gap-3">
           <button
             onClick={() => setShowCreate(true)}
-            className="rounded-full bg-[var(--lagoon-deep)] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            className="rounded-sm bg-[var(--lagoon-deep)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--on-accent)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
           >
             Add Item
           </button>
           <Link
             to="/templates"
-            className="rounded-full border border-[var(--line)] bg-white px-6 py-3 text-sm font-semibold text-[var(--sea-ink)] transition hover:bg-gray-50"
+            className="rounded-sm border border-[var(--line)] bg-[var(--surface-strong)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--sea-ink)] transition hover:border-[var(--lagoon-deep)] hover:text-[var(--lagoon-deep)]"
           >
             Manage Templates
           </Link>
           <Link
             to="/"
-            className="rounded-full border border-[var(--line)] bg-white px-6 py-3 text-sm font-semibold text-[var(--sea-ink)] transition hover:bg-gray-50"
+            className="rounded-sm border border-[var(--line)] bg-[var(--surface-strong)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--sea-ink)] transition hover:border-[var(--lagoon-deep)] hover:text-[var(--lagoon-deep)]"
           >
             Back to Dashboard
           </Link>
@@ -193,7 +196,7 @@ function ItemsPage() {
       </section>
 
       {deleteError && (
-        <div className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <div className="mt-6 rounded-lg border border-[var(--danger-border)] bg-[var(--danger-bg)] px-4 py-3 text-sm text-[var(--danger-fg)]">
           {deleteError}
           <button onClick={() => setDeleteError(null)} className="ml-2 font-semibold underline">
             Dismiss
@@ -356,7 +359,7 @@ function CreateItemModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[var(--line)] bg-white p-6 shadow-lg">
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[var(--line)] bg-[var(--surface-strong)] p-6 shadow-lg">
         <h2 className="mb-4 text-xl font-bold text-[var(--sea-ink)]">Add Item</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -364,7 +367,7 @@ function CreateItemModal({
             <select
               value={templateId}
               onChange={(e) => setTemplateId(e.target.value)}
-              className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm"
+              className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm"
             >
               {templates.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -384,7 +387,7 @@ function CreateItemModal({
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Living Room Paint"
               required
-              className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm"
+              className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm"
             />
           </div>
 
@@ -395,7 +398,7 @@ function CreateItemModal({
             <select
               value={roomId}
               onChange={(e) => setRoomId(e.target.value)}
-              className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm"
+              className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm"
             >
               <option value="">None</option>
               {rooms.map((r) => (
@@ -413,7 +416,7 @@ function CreateItemModal({
             <select
               value={systemUnitId}
               onChange={(e) => setSystemUnitId(e.target.value)}
-              className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm"
+              className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm"
             >
               <option value="">None</option>
               {systemUnits.map((u) => (
@@ -428,13 +431,13 @@ function CreateItemModal({
             <div key={field.key}>
               <label className="mb-2 block text-sm font-medium text-[var(--sea-ink)]">
                 {field.label}
-                {field.required && <span className="text-red-500"> *</span>}
+                {field.required && <span className="text-[var(--danger-fg)]"> *</span>}
               </label>
               {field.type === "select" ? (
                 <select
                   value={(fields[field.key] as string) ?? ""}
                   onChange={(e) => handleFieldChange(field.key, e.target.value)}
-                  className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm"
+                  className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm"
                 >
                   <option value="">Select...</option>
                   {field.options?.map((opt) => (
@@ -462,7 +465,7 @@ function CreateItemModal({
                       field.type === "number" ? Number(e.target.value) : e.target.value,
                     )
                   }
-                  className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm"
+                  className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm"
                 />
               )}
             </div>
@@ -473,14 +476,14 @@ function CreateItemModal({
               type="button"
               onClick={onCancel}
               disabled={pending}
-              className="flex-1 rounded-full border border-[var(--line)] bg-white px-6 py-3 text-sm font-semibold"
+              className="flex-1 rounded-full border border-[var(--line)] bg-[var(--surface-strong)] px-6 py-3 text-sm font-semibold"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={pending || !name.trim()}
-              className="flex-1 rounded-full bg-[var(--lagoon-deep)] px-6 py-3 text-sm font-semibold text-white"
+              className="flex-1 rounded-full bg-[var(--lagoon-deep)] px-6 py-3 text-sm font-semibold text-[var(--on-accent)]"
             >
               {pending ? "Creating…" : "Create Item"}
             </button>
@@ -532,7 +535,7 @@ function EditItemModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[var(--line)] bg-white p-6 shadow-lg">
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[var(--line)] bg-[var(--surface-strong)] p-6 shadow-lg">
         <h2 className="mb-4 text-xl font-bold text-[var(--sea-ink)]">Edit Item</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -544,7 +547,7 @@ function EditItemModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm"
+              className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm"
             />
           </div>
 
@@ -555,7 +558,7 @@ function EditItemModal({
             <select
               value={roomId}
               onChange={(e) => setRoomId(e.target.value)}
-              className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm"
+              className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm"
             >
               <option value="">None</option>
               {rooms.map((r) => (
@@ -573,7 +576,7 @@ function EditItemModal({
             <select
               value={systemUnitId}
               onChange={(e) => setSystemUnitId(e.target.value)}
-              className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm"
+              className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm"
             >
               <option value="">None</option>
               {systemUnits.map((u) => (
@@ -593,7 +596,7 @@ function EditItemModal({
                 <select
                   value={(fields[field.key] as string) ?? ""}
                   onChange={(e) => handleFieldChange(field.key, e.target.value)}
-                  className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm"
+                  className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm"
                 >
                   <option value="">Select...</option>
                   {field.options?.map((opt) => (
@@ -621,7 +624,7 @@ function EditItemModal({
                       field.type === "number" ? Number(e.target.value) : e.target.value,
                     )
                   }
-                  className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm"
+                  className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm"
                 />
               )}
             </div>
@@ -632,14 +635,14 @@ function EditItemModal({
               type="button"
               onClick={onCancel}
               disabled={pending}
-              className="flex-1 rounded-full border border-[var(--line)] bg-white px-6 py-3 text-sm font-semibold"
+              className="flex-1 rounded-full border border-[var(--line)] bg-[var(--surface-strong)] px-6 py-3 text-sm font-semibold"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={pending || !name.trim()}
-              className="flex-1 rounded-full bg-[var(--lagoon-deep)] px-6 py-3 text-sm font-semibold text-white"
+              className="flex-1 rounded-full bg-[var(--lagoon-deep)] px-6 py-3 text-sm font-semibold text-[var(--on-accent)]"
             >
               {pending ? "Saving…" : "Save Changes"}
             </button>
@@ -672,7 +675,7 @@ function MoveItemModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md rounded-2xl border border-[var(--line)] bg-white p-6 shadow-lg">
+      <div className="w-full max-w-md rounded-2xl border border-[var(--line)] bg-[var(--surface-strong)] p-6 shadow-lg">
         <h2 className="mb-4 text-xl font-bold text-[var(--sea-ink)]">Move Item</h2>
         <p className="mb-4 text-sm text-[var(--sea-ink-soft)]">
           Move <strong>{item.name}</strong> to a different room.
@@ -683,7 +686,7 @@ function MoveItemModal({
             <select
               value={roomId}
               onChange={(e) => setRoomId(e.target.value)}
-              className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm"
+              className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm"
             >
               <option value="">No Room</option>
               {rooms.map((r) => (
@@ -699,14 +702,14 @@ function MoveItemModal({
               type="button"
               onClick={onCancel}
               disabled={pending}
-              className="flex-1 rounded-full border border-[var(--line)] bg-white px-6 py-3 text-sm font-semibold"
+              className="flex-1 rounded-full border border-[var(--line)] bg-[var(--surface-strong)] px-6 py-3 text-sm font-semibold"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={pending}
-              className="flex-1 rounded-full bg-[var(--lagoon-deep)] px-6 py-3 text-sm font-semibold text-white"
+              className="flex-1 rounded-full bg-[var(--lagoon-deep)] px-6 py-3 text-sm font-semibold text-[var(--on-accent)]"
             >
               {pending ? "Moving…" : "Move Item"}
             </button>

@@ -16,17 +16,20 @@ function SignInPage() {
   }
 
   return (
-    <main className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4">
-      <section className="w-full max-w-sm rounded-2xl border border-[var(--line)] bg-white/60 p-8 text-center shadow-sm backdrop-blur">
-        <h1 className="mb-2 text-2xl font-bold tracking-tight text-[var(--sea-ink)]">
-          Welcome to Homefolio
+    <main className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
+      <section className="w-full max-w-sm border-t-2 border-[var(--lagoon-deep)] bg-[var(--surface-strong)] px-7 py-9 text-center shadow-[0_24px_60px_-40px_rgba(26,24,20,0.4)] backdrop-blur">
+        <p className="island-kicker mb-3 justify-center">The Residence</p>
+        <h1 className="display-title mb-3 text-3xl text-[var(--sea-ink)]">
+          Welcome<span className="text-[var(--lagoon-deep)]">.</span>
         </h1>
-        <p className="mb-8 text-sm text-[var(--sea-ink-soft)]">Sign in to manage your home.</p>
+        <p className="mb-8 font-serif text-base italic text-[var(--sea-ink-soft)]">
+          Sign in to keep records on the house you live in.
+        </p>
         <button
           type="button"
           onClick={() => signInWithGoogle()}
           disabled={status === "loading"}
-          className="inline-flex w-full items-center justify-center gap-3 rounded-full border border-[rgba(23,58,64,0.2)] bg-white px-5 py-3 text-sm font-semibold text-[#173a40] shadow-sm transition hover:-translate-y-0.5 hover:border-[rgba(23,58,64,0.35)] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+          className="inline-flex w-full items-center justify-center gap-3 rounded-sm border border-[var(--line)] bg-[var(--surface-strong)] px-5 py-3 text-sm font-semibold text-[var(--sea-ink)] shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--lagoon-deep)] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20">
             <path

@@ -68,7 +68,7 @@ export function DocumentUpload({ entityType, entityId, onUploadComplete }: Docum
         <select
           value={type}
           onChange={(e) => setType(e.target.value as DocumentType)}
-          className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm"
+          className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm"
         >
           {Object.entries(DOCUMENT_TYPE_LABELS).map(([value, label]) => (
             <option key={value} value={value}>
@@ -83,7 +83,7 @@ export function DocumentUpload({ entityType, entityId, onUploadComplete }: Docum
         <input
           type="file"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm"
+          className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm"
         />
       </div>
 
@@ -95,13 +95,13 @@ export function DocumentUpload({ entityType, entityId, onUploadComplete }: Docum
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Add any notes about this document..."
-          className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm"
+          className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm"
           rows={3}
         />
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <div className="rounded-lg border border-[var(--danger-border)] bg-[var(--danger-bg)] px-4 py-3 text-sm text-[var(--danger-fg)]">
           {error}
         </div>
       )}
@@ -109,7 +109,7 @@ export function DocumentUpload({ entityType, entityId, onUploadComplete }: Docum
       <button
         type="submit"
         disabled={!file || uploading}
-        className="w-full rounded-full bg-[var(--lagoon-deep)] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full rounded-full bg-[var(--lagoon-deep)] px-6 py-3 text-sm font-semibold text-[var(--on-accent)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
       >
         {uploading ? "Uploading..." : "Upload Document"}
       </button>

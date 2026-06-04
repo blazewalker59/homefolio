@@ -53,7 +53,7 @@ export function ItemFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[var(--line)] bg-white p-6 shadow-lg">
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[var(--line)] bg-[var(--surface-strong)] p-6 shadow-lg">
         <h2 className="mb-4 text-xl font-bold text-[var(--sea-ink)]">{title}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -61,7 +61,7 @@ export function ItemFormModal({
             <select
               value={templateId}
               onChange={(e) => setTemplateId(e.target.value)}
-              className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm"
+              className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm"
             >
               {templates.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -81,7 +81,7 @@ export function ItemFormModal({
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Living Room Paint"
               required
-              className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm"
+              className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm"
             />
           </div>
 
@@ -89,13 +89,13 @@ export function ItemFormModal({
             <div key={field.key}>
               <label className="mb-2 block text-sm font-medium text-[var(--sea-ink)]">
                 {field.label}
-                {field.required && <span className="text-red-500"> *</span>}
+                {field.required && <span className="text-[var(--danger-fg)]"> *</span>}
               </label>
               {field.type === "select" ? (
                 <select
                   value={(fields[field.key] as string) ?? ""}
                   onChange={(e) => handleFieldChange(field.key, e.target.value)}
-                  className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm"
+                  className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm"
                 >
                   <option value="">Select...</option>
                   {field.options?.map((opt) => (
@@ -123,7 +123,7 @@ export function ItemFormModal({
                       field.type === "number" ? Number(e.target.value) : e.target.value,
                     )
                   }
-                  className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-2.5 text-sm"
+                  className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm"
                 />
               )}
             </div>
@@ -134,14 +134,14 @@ export function ItemFormModal({
               type="button"
               onClick={onCancel}
               disabled={pending}
-              className="flex-1 rounded-full border border-[var(--line)] bg-white px-6 py-3 text-sm font-semibold text-[var(--sea-ink)] transition hover:bg-gray-50 disabled:opacity-50"
+              className="flex-1 rounded-full border border-[var(--line)] bg-[var(--surface-strong)] px-6 py-3 text-sm font-semibold text-[var(--sea-ink)] transition hover:bg-[var(--link-bg-hover)] disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={pending || !name.trim()}
-              className="flex-1 rounded-full bg-[var(--lagoon-deep)] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+              className="flex-1 rounded-full bg-[var(--lagoon-deep)] px-6 py-3 text-sm font-semibold text-[var(--on-accent)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
             >
               {pending ? "Creating…" : "Create Item"}
             </button>

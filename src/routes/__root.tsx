@@ -20,7 +20,7 @@ export const Route = createRootRoute({
       },
       {
         name: "theme-color",
-        content: "#2f6f4f",
+        content: "#8a611e",
       },
       {
         title: "Homefolio",
@@ -30,6 +30,15 @@ export const Route = createRootRoute({
       {
         rel: "stylesheet",
         href: appCss,
+      },
+      {
+        rel: "icon",
+        type: "image/svg+xml",
+        href: "/favicon.svg?v=1",
+      },
+      {
+        rel: "apple-touch-icon",
+        href: "/favicon.svg?v=1",
       },
       {
         rel: "manifest",
@@ -47,7 +56,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />
       </head>
-      <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
+      <body className="font-sans antialiased [overflow-wrap:anywhere]">
         <Header />
         {children}
         <Footer />
