@@ -6,10 +6,10 @@ import {
   createSystemFn,
   updateSystemFn,
   deleteSystemFn,
-  listSystemUnitsFn,
   createSystemUnitFn,
   updateSystemUnitFn,
   deleteSystemUnitFn,
+  listSystemUnitsFn,
 } from "@/server/system";
 import {
   seedTemplatesFn,
@@ -18,6 +18,7 @@ import {
   createItemFn,
 } from "@/server/item";
 import { ItemFormModal } from "@/components/ItemFormModal";
+import { DropdownMenu } from "@/components/DropdownMenu";
 import { systems, systemUnits, itemTemplates, items } from "@/db/schema";
 import type { InferSelectModel } from "drizzle-orm";
 
@@ -332,7 +333,7 @@ function SystemCard({
   pending: boolean;
 }) {
   return (
-    <article className="island-shell feature-card rise-in rounded-2xl p-5">
+    <article className="island-shell feature-card rise-in relative rounded-2xl p-5">
       <div className="mb-3 flex items-start justify-between">
         <div>
           <h2 className="text-lg font-semibold text-[var(--sea-ink)]">{system.name}</h2>
@@ -340,22 +341,14 @@ function SystemCard({
             {system.units.length} {system.units.length === 1 ? "unit" : "units"}
           </p>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={onEdit}
-            disabled={pending}
-            className="rounded-lg border border-[var(--line)] bg-white px-3 py-1.5 text-xs font-medium text-[var(--sea-ink)] transition hover:bg-gray-50 disabled:opacity-50"
-          >
+        <DropdownMenu>
+          <DropdownMenu.Item onClick={onEdit} disabled={pending}>
             Edit
-          </button>
-          <button
-            onClick={onDelete}
-            disabled={pending}
-            className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-50"
-          >
+          </DropdownMenu.Item>
+          <DropdownMenu.Item onClick={onDelete} variant="danger" disabled={pending}>
             Delete
-          </button>
-        </div>
+          </DropdownMenu.Item>
+        </DropdownMenu>
       </div>
 
       {system.units.length > 0 && (
@@ -364,22 +357,18 @@ function SystemCard({
             <div key={unit.id} className="rounded-lg bg-gray-50 p-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-[var(--sea-ink)]">{unit.name}</span>
-                <div className="flex gap-1.5">
-                  <button
-                    onClick={() => onEditUnit(unit)}
-                    disabled={pending}
-                    className="rounded px-2 py-1 text-xs text-[var(--sea-ink-soft)] transition hover:bg-gray-200 disabled:opacity-50"
-                  >
+                <DropdownMenu>
+                  <DropdownMenu.Item onClick={() => onEditUnit(unit)} disabled={pending}>
                     Edit
-                  </button>
-                  <button
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item
                     onClick={() => onDeleteUnit(unit.id)}
+                    variant="danger"
                     disabled={pending}
-                    className="rounded px-2 py-1 text-xs text-red-500 transition hover:bg-red-100 disabled:opacity-50"
                   >
                     Delete
-                  </button>
-                </div>
+                  </DropdownMenu.Item>
+                </DropdownMenu>
               </div>
 
               {unit.items.length > 0 && (

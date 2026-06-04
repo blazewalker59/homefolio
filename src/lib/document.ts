@@ -133,6 +133,27 @@ export async function downloadDocument(documentId: string): Promise<{
 }
 
 /**
+ * Update a document's metadata (type, entity, notes).
+ */
+export async function updateDocument(
+  documentId: string,
+  updates: {
+    type?: DocumentType;
+    entityType?: DocumentEntityType;
+    entityId?: string;
+    notes?: string;
+  },
+) {
+  const db = await getDb();
+  const [doc] = await db
+    .update(documents)
+    .set({ ...updates, updatedAt: new Date() })
+    .where(eq(documents.id, documentId))
+    .returning();
+  return doc;
+}
+
+/**
  * Delete a document and its file from storage.
  */
 export async function deleteDocument(documentId: string): Promise<void> {

@@ -14,6 +14,7 @@ import {
   listDocumentsByHome,
   getDocumentUrl,
   deleteDocument,
+  updateDocument,
 } from "@/lib/document";
 import { requireSessionUser } from "@/lib/auth/session";
 import {
@@ -122,6 +123,29 @@ export const deleteDocumentFn = createServerFn({ method: "POST" })
     await requireSessionUser();
     await deleteDocument(data.documentId);
     return { success: true };
+  });
+
+const updateDocumentSchema = z.object({
+  documentId: z.string().uuid(),
+  type: z.string().refine(isValidDocumentType, { message: "Invalid document type" }).optional(),
+  entityType: z.string().refine(isValidEntityType, { message: "Invalid entity type" }).optional(),
+  entityId: z.string().uuid().optional(),
+  notes: z.string().optional(),
+});
+
+/**
+ * Update a document's metadata (type, entity, notes).
+ */
+export const updateDocumentFn = createServerFn({ method: "POST" })
+  .inputValidator((raw: unknown) => updateDocumentSchema.parse(raw))
+  .handler(async ({ data }) => {
+    await requireSessionUser();
+    return updateDocument(data.documentId, {
+      type: data.type as DocumentType | undefined,
+      entityType: data.entityType as DocumentEntityType | undefined,
+      entityId: data.entityId,
+      notes: data.notes,
+    });
   });
 
 /**

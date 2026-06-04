@@ -1,15 +1,35 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { getHomeFn } from "@/server/home";
-import { listHomeDocumentsFn, deleteDocumentFn } from "@/server/document";
+import { listHomeDocumentsFn, deleteDocumentFn, updateDocumentFn } from "@/server/document";
 import { listRoomsFn } from "@/server/room";
 import { listSystemsFn } from "@/server/system";
 import { listItemsFn } from "@/server/item";
 import { DocumentUpload } from "@/components/DocumentUpload";
+import { DropdownMenu } from "@/components/DropdownMenu";
 import type { documents } from "@/db/schema";
 import type { InferSelectModel } from "drizzle-orm";
+import type { DocumentType, DocumentEntityType } from "@/lib/storage/types";
 
 type Document = InferSelectModel<typeof documents>;
+
+const DOCUMENT_TYPE_LABELS: Record<string, string> = {
+  receipt: "Receipt",
+  image: "Image",
+  manual: "Manual",
+  warranty: "Warranty",
+  contract: "Contract",
+  other: "Other",
+};
+
+const DOCUMENT_TYPE_OPTIONS: DocumentType[] = [
+  "receipt",
+  "image",
+  "manual",
+  "warranty",
+  "contract",
+  "other",
+];
 
 export const Route = createFileRoute("/documents")({
   loader: async () => {
@@ -52,6 +72,12 @@ function DocumentsPage() {
     id: string;
   } | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editType, setEditType] = useState<DocumentType>("other");
+  const [editEntityType, setEditEntityType] = useState<DocumentEntityType>("home");
+  const [editEntityId, setEditEntityId] = useState("");
+  const [editNotes, setEditNotes] = useState("");
+  const [saving, setSaving] = useState(false);
 
   async function handleDelete(documentId: string) {
     if (!confirm("Are you sure you want to delete this document?")) return;
@@ -67,11 +93,64 @@ function DocumentsPage() {
     }
   }
 
+  function startEdit(doc: Document) {
+    setEditing(doc.id);
+    setEditType(doc.type as DocumentType);
+    setEditEntityType(doc.entityType as DocumentEntityType);
+    setEditEntityId(doc.entityId);
+    setEditNotes(doc.notes || "");
+  }
+
+  function cancelEdit() {
+    setEditing(null);
+    setEditType("other");
+    setEditEntityType("home");
+    setEditEntityId("");
+    setEditNotes("");
+  }
+
+  async function saveEdit(documentId: string) {
+    setSaving(true);
+    try {
+      const updated = await updateDocumentFn({
+        data: {
+          documentId,
+          type: editType,
+          entityType: editEntityType,
+          entityId: editEntityId,
+          notes: editNotes || undefined,
+        },
+      });
+      setDocuments((prev) => prev.map((d) => (d.id === documentId ? { ...d, ...updated } : d)));
+      cancelEdit();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to update document");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   function handleUploadComplete() {
     setShowUpload(false);
     setSelectedEntity(null);
-    // Reload documents
     listHomeDocumentsFn().then((docs) => setDocuments(docs as Document[]));
+  }
+
+  function getEntityName(entityType: string, entityId: string): string {
+    if (entityType === "home") return home.name || "Home";
+    if (entityType === "room") {
+      const room = rooms.find((r) => r.id === entityId);
+      return room?.name || "Room";
+    }
+    if (entityType === "system") {
+      const system = systems.find((s) => s.id === entityId);
+      return system?.name || "System";
+    }
+    if (entityType === "item") {
+      const item = items.find((i) => i.id === entityId);
+      return item?.name || "Item";
+    }
+    return entityId;
   }
 
   return (
@@ -198,34 +277,138 @@ function DocumentsPage() {
             {documents.map((doc) => (
               <div
                 key={doc.id}
-                className="island-shell flex items-center justify-between rounded-lg border border-[var(--line)] bg-white p-4"
+                className="island-shell rounded-lg border border-[var(--line)] bg-white p-4"
               >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-[var(--sea-ink)]">{doc.filename}</span>
-                    <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-[var(--sea-ink-soft)]">
-                      {doc.type}
-                    </span>
-                    <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-[var(--sea-ink-soft)]">
-                      {doc.entityType}
-                    </span>
-                  </div>
-                  <div className="mt-1 text-xs text-[var(--sea-ink-soft)]">
-                    {formatFileSize(doc.size)} • Uploaded {formatDate(doc.createdAt)}
-                  </div>
-                  {doc.notes && (
-                    <div className="mt-1 text-xs text-[var(--sea-ink-soft)] italic">
-                      {doc.notes}
+                {editing === doc.id ? (
+                  <div className="space-y-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-[var(--sea-ink-soft)]">
+                          Type
+                        </label>
+                        <select
+                          value={editType}
+                          onChange={(e) => setEditType(e.target.value as DocumentType)}
+                          className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm text-[var(--sea-ink)]"
+                        >
+                          {DOCUMENT_TYPE_OPTIONS.map((t) => (
+                            <option key={t} value={t}>
+                              {DOCUMENT_TYPE_LABELS[t] || t}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-[var(--sea-ink-soft)]">
+                          Attached to
+                        </label>
+                        <div className="flex gap-2">
+                          <select
+                            value={editEntityType}
+                            onChange={(e) => {
+                              const newType = e.target.value as DocumentEntityType;
+                              setEditEntityType(newType);
+                              if (newType === "home") setEditEntityId(home.id);
+                            }}
+                            className="rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm text-[var(--sea-ink)]"
+                          >
+                            <option value="home">Home</option>
+                            <option value="room">Room</option>
+                            <option value="system">System</option>
+                            <option value="item">Item</option>
+                          </select>
+                          {editEntityType !== "home" && (
+                            <select
+                              value={editEntityId}
+                              onChange={(e) => setEditEntityId(e.target.value)}
+                              className="flex-1 rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm text-[var(--sea-ink)]"
+                            >
+                              <option value="">Select...</option>
+                              {editEntityType === "room" &&
+                                rooms.map((r) => (
+                                  <option key={r.id} value={r.id}>
+                                    {r.name}
+                                  </option>
+                                ))}
+                              {editEntityType === "system" &&
+                                systems.map((s) => (
+                                  <option key={s.id} value={s.id}>
+                                    {s.name}
+                                  </option>
+                                ))}
+                              {editEntityType === "item" &&
+                                items.map((i) => (
+                                  <option key={i.id} value={i.id}>
+                                    {i.name}
+                                  </option>
+                                ))}
+                            </select>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  )}
-                </div>
-                <button
-                  onClick={() => handleDelete(doc.id)}
-                  disabled={deleting === doc.id}
-                  className="ml-4 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-50"
-                >
-                  {deleting === doc.id ? "Deleting..." : "Delete"}
-                </button>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-[var(--sea-ink-soft)]">
+                        Notes
+                      </label>
+                      <textarea
+                        value={editNotes}
+                        onChange={(e) => setEditNotes(e.target.value)}
+                        rows={2}
+                        className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm text-[var(--sea-ink)]"
+                        placeholder="Optional notes..."
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => saveEdit(doc.id)}
+                        disabled={saving}
+                        className="rounded-lg bg-[var(--lagoon-deep)] px-4 py-1.5 text-xs font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+                      >
+                        {saving ? "Saving..." : "Save"}
+                      </button>
+                      <button
+                        onClick={cancelEdit}
+                        disabled={saving}
+                        className="rounded-lg border border-[var(--line)] bg-white px-4 py-1.5 text-xs font-medium text-[var(--sea-ink)] transition hover:bg-gray-50"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-[var(--sea-ink)]">{doc.filename}</div>
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-[var(--sea-ink-soft)]">
+                          {DOCUMENT_TYPE_LABELS[doc.type] || doc.type}
+                        </span>
+                        <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-[var(--sea-ink-soft)]">
+                          {getEntityName(doc.entityType, doc.entityId)}
+                        </span>
+                        <span className="text-xs text-[var(--sea-ink-soft)]">
+                          {formatFileSize(doc.size)} • Uploaded {formatDate(doc.createdAt)}
+                        </span>
+                      </div>
+                      {doc.notes && (
+                        <div className="mt-2 text-xs text-[var(--sea-ink-soft)] italic">
+                          {doc.notes}
+                        </div>
+                      )}
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenu.Item onClick={() => startEdit(doc)}>Edit</DropdownMenu.Item>
+                      <DropdownMenu.Item
+                        onClick={() => handleDelete(doc.id)}
+                        variant="danger"
+                        disabled={deleting === doc.id}
+                      >
+                        {deleting === doc.id ? "Deleting..." : "Delete"}
+                      </DropdownMenu.Item>
+                    </DropdownMenu>
+                  </div>
+                )}
               </div>
             ))}
           </div>

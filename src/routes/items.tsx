@@ -12,6 +12,7 @@ import {
 } from "@/server/item";
 import { listRoomsFn } from "@/server/room";
 import { listSystemsFn, listSystemUnitsFn } from "@/server/system";
+import { DropdownMenu } from "@/components/DropdownMenu";
 import type { itemTemplates, items, rooms, systemUnits } from "@/db/schema";
 import type { InferSelectModel } from "drizzle-orm";
 
@@ -270,15 +271,23 @@ function ItemCard({
   pending: boolean;
 }) {
   return (
-    <article className="island-shell feature-card rise-in rounded-2xl p-5">
+    <article className="island-shell feature-card rise-in relative rounded-2xl p-5">
       <div className="mb-3 flex items-start justify-between">
         <div>
           <h2 className="text-lg font-semibold text-[var(--sea-ink)]">{item.name}</h2>
           <p className="text-xs text-[var(--sea-ink-soft)]">{item.template?.name}</p>
         </div>
-        <span className="inline-flex rounded-full bg-[var(--lagoon-deep)]/10 px-2.5 py-0.5 text-xs font-medium text-[var(--lagoon-deep)]">
-          {item.template?.category}
-        </span>
+        <DropdownMenu>
+          <DropdownMenu.Item onClick={onEdit} disabled={pending}>
+            Edit
+          </DropdownMenu.Item>
+          <DropdownMenu.Item onClick={onMove} disabled={pending}>
+            Move
+          </DropdownMenu.Item>
+          <DropdownMenu.Item onClick={onDelete} variant="danger" disabled={pending}>
+            Delete
+          </DropdownMenu.Item>
+        </DropdownMenu>
       </div>
 
       {item.room && (
@@ -291,30 +300,11 @@ function ItemCard({
           System Unit: <span className="font-medium">{item.systemUnit.name}</span>
         </p>
       )}
-
-      <div className="flex gap-2 pt-2">
-        <button
-          onClick={onEdit}
-          disabled={pending}
-          className="flex-1 rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-xs font-medium text-[var(--sea-ink)] transition hover:bg-gray-50 disabled:opacity-50"
-        >
-          Edit
-        </button>
-        <button
-          onClick={onMove}
-          disabled={pending}
-          className="flex-1 rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-xs font-medium text-[var(--sea-ink)] transition hover:bg-gray-50 disabled:opacity-50"
-        >
-          Move
-        </button>
-        <button
-          onClick={onDelete}
-          disabled={pending}
-          className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-50"
-        >
-          Delete
-        </button>
-      </div>
+      {item.template?.category && (
+        <span className="inline-flex rounded-full bg-[var(--lagoon-deep)]/10 px-2.5 py-0.5 text-xs font-medium text-[var(--lagoon-deep)]">
+          {item.template.category}
+        </span>
+      )}
     </article>
   );
 }
