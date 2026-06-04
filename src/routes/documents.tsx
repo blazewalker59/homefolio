@@ -77,6 +77,7 @@ function DocumentsPage() {
   const [editEntityType, setEditEntityType] = useState<DocumentEntityType>("home");
   const [editEntityId, setEditEntityId] = useState("");
   const [editNotes, setEditNotes] = useState("");
+  const [editAmount, setEditAmount] = useState("");
   const [saving, setSaving] = useState(false);
 
   async function handleDelete(documentId: string) {
@@ -99,6 +100,7 @@ function DocumentsPage() {
     setEditEntityType(doc.entityType as DocumentEntityType);
     setEditEntityId(doc.entityId);
     setEditNotes(doc.notes || "");
+    setEditAmount(doc.amount || "");
   }
 
   function cancelEdit() {
@@ -107,6 +109,7 @@ function DocumentsPage() {
     setEditEntityType("home");
     setEditEntityId("");
     setEditNotes("");
+    setEditAmount("");
   }
 
   async function saveEdit(documentId: string) {
@@ -119,6 +122,7 @@ function DocumentsPage() {
           entityType: editEntityType,
           entityId: editEntityId,
           notes: editNotes || undefined,
+          amount: editType === "receipt" ? editAmount || null : null,
         },
       });
       setDocuments((prev) => prev.map((d) => (d.id === documentId ? { ...d, ...updated } : d)));
@@ -350,6 +354,22 @@ function DocumentsPage() {
                         </div>
                       </div>
                     </div>
+                    {editType === "receipt" && (
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-[var(--sea-ink-soft)]">
+                          Amount ($)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={editAmount}
+                          onChange={(e) => setEditAmount(e.target.value)}
+                          placeholder="0.00"
+                          className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-2 text-sm text-[var(--sea-ink)]"
+                        />
+                      </div>
+                    )}
                     <div>
                       <label className="mb-1 block text-xs font-medium text-[var(--sea-ink-soft)]">
                         Notes
@@ -387,6 +407,11 @@ function DocumentsPage() {
                         <span className="rounded bg-[var(--chip-bg)] px-2 py-0.5 text-xs text-[var(--sea-ink-soft)]">
                           {DOCUMENT_TYPE_LABELS[doc.type] || doc.type}
                         </span>
+                        {doc.type === "receipt" && doc.amount && (
+                          <span className="rounded bg-[var(--chip-bg)] px-2 py-0.5 text-xs font-medium text-[var(--sea-ink)]">
+                            ${parseFloat(doc.amount).toFixed(2)}
+                          </span>
+                        )}
                         <span className="rounded bg-[var(--chip-bg)] px-2 py-0.5 text-xs text-[var(--sea-ink-soft)]">
                           {getEntityName(doc.entityType, doc.entityId)}
                         </span>

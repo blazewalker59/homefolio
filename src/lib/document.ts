@@ -11,6 +11,7 @@ import { getDb } from "@/db/client";
 import { documents } from "@/db/schema";
 import type { DocumentType, DocumentEntityType } from "@/lib/storage/types";
 import { getStorageProvider, generateStorageKey } from "@/lib/storage";
+import { logReceiptUploaded } from "@/lib/activity";
 
 export interface CreateDocumentParams {
   homeId: string;
@@ -21,6 +22,7 @@ export interface CreateDocumentParams {
   mimeType: string;
   fileContent: ArrayBuffer | Uint8Array;
   notes?: string;
+  amount?: string; // Only used for receipts
   uploadedBy: string;
 }
 
@@ -56,9 +58,23 @@ export async function createDocument(params: CreateDocumentParams) {
       size,
       storageKey,
       notes: params.notes,
+      amount: params.amount,
       uploadedBy: params.uploadedBy,
     })
     .returning();
+
+  // Auto-create a purchase activity when a receipt is uploaded
+  if (params.type === "receipt") {
+    await logReceiptUploaded({
+      homeId: params.homeId,
+      documentId: doc.id,
+      filename: params.filename,
+      amount: params.amount,
+      entityType: params.entityType,
+      entityId: params.entityId,
+      createdBy: params.uploadedBy,
+    });
+  }
 
   return doc;
 }
@@ -133,7 +149,7 @@ export async function downloadDocument(documentId: string): Promise<{
 }
 
 /**
- * Update a document's metadata (type, entity, notes).
+ * Update a document's metadata (type, entity, notes, amount).
  */
 export async function updateDocument(
   documentId: string,
@@ -142,6 +158,7 @@ export async function updateDocument(
     entityType?: DocumentEntityType;
     entityId?: string;
     notes?: string;
+    amount?: string | null;
   },
 ) {
   const db = await getDb();
@@ -168,4 +185,27 @@ export async function deleteDocument(documentId: string): Promise<void> {
   await storage.delete(doc.storageKey);
 
   await db.delete(documents).where(eq(documents.id, documentId));
+}
+
+/**
+ * List all receipt documents for a home.
+ */
+export async function listReceiptsByHome(homeId: string) {
+  const db = await getDb();
+  return db
+    .select()
+    .from(documents)
+    .where(and(eq(documents.homeId, homeId), eq(documents.type, "receipt")))
+    .orderBy(documents.createdAt);
+}
+
+/**
+ * Calculate the total amount from all receipts for a home.
+ */
+export async function calculateReceiptTotal(homeId: string): Promise<number> {
+  const receipts = await listReceiptsByHome(homeId);
+  return receipts.reduce((total, receipt) => {
+    const amount = receipt.amount ? parseFloat(receipt.amount) : 0;
+    return total + amount;
+  }, 0);
 }

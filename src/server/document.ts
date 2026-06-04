@@ -37,6 +37,7 @@ const uploadDocumentSchema = z.object({
   mimeType: z.string().min(1),
   fileContent: z.string(), // Base64 encoded
   notes: z.string().optional(),
+  amount: z.string().optional(), // Only used for receipts
 });
 
 /**
@@ -63,6 +64,7 @@ export const uploadDocumentFn = createServerFn({ method: "POST" })
       mimeType: data.mimeType,
       fileContent,
       notes: data.notes,
+      amount: data.amount,
       uploadedBy: user.id,
     });
 
@@ -131,10 +133,11 @@ const updateDocumentSchema = z.object({
   entityType: z.string().refine(isValidEntityType, { message: "Invalid entity type" }).optional(),
   entityId: z.string().uuid().optional(),
   notes: z.string().optional(),
+  amount: z.string().nullable().optional(),
 });
 
 /**
- * Update a document's metadata (type, entity, notes).
+ * Update a document's metadata (type, entity, notes, amount).
  */
 export const updateDocumentFn = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) => updateDocumentSchema.parse(raw))
@@ -145,6 +148,7 @@ export const updateDocumentFn = createServerFn({ method: "POST" })
       entityType: data.entityType as DocumentEntityType | undefined,
       entityId: data.entityId,
       notes: data.notes,
+      amount: data.amount,
     });
   });
 
