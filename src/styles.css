@@ -1,76 +1,179 @@
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,500&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap");
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
 @theme {
-  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
 
+/* ---------------------------------------------------------------------------
+   Homefolio — Editorial Real-Estate palette
+   A design-magazine for your house: warm bone paper, deep ink, brushed-brass
+   accents, hairline rules, and high-contrast Playfair Display headings. Light
+   is canonical; dark is a midnight-foyer alternate. The CSS variable names
+   are kept stable from the previous theme so every existing callsite inherits
+   the new look without markup changes — only the *values* moved.
+   --------------------------------------------------------------------------- */
+
+/* Light (canonical) — warm bone paper -------------------------------------- */
 :root {
-  --sea-ink: #173a40;
-  --sea-ink-soft: #416166;
-  --lagoon: #4fb8b2;
-  --lagoon-deep: #328f97;
-  --palm: #2f6a4a;
-  --sand: #e7f0e8;
-  --foam: #f3faf5;
-  --surface: rgba(255, 255, 255, 0.74);
-  --surface-strong: rgba(255, 255, 255, 0.9);
-  --line: rgba(23, 58, 64, 0.14);
-  --inset-glint: rgba(255, 255, 255, 0.82);
-  --kicker: rgba(47, 106, 74, 0.9);
-  --bg-base: #e7f3ec;
-  --header-bg: rgba(251, 255, 248, 0.84);
-  --chip-bg: rgba(255, 255, 255, 0.8);
-  --chip-line: rgba(47, 106, 74, 0.18);
-  --link-bg-hover: rgba(255, 255, 255, 0.9);
-  --hero-a: rgba(79, 184, 178, 0.36);
-  --hero-b: rgba(47, 106, 74, 0.2);
+  /* text */
+  --sea-ink: #1a1814; /* warm ink, primary text */
+  --sea-ink-soft: #6f665a; /* warm graphite */
+
+  /* accents (brass family) */
+  --lagoon: #b8893a; /* brushed brass, primary accent */
+  --lagoon-deep: #8a611e; /* deep brass, pressed/active */
+  --palm: #8a611e; /* eyebrow brass — same as lagoon-deep */
+
+  /* surface tones */
+  --sand: #efe7d6; /* warm cream panel */
+  --foam: #f7f1e3; /* lighter cream */
+  --bg-base: #f3ebd9; /* bone paper, page ground */
+
+  --surface: rgba(252, 247, 235, 0.82);
+  --surface-strong: rgba(252, 247, 235, 0.96);
+  --line: rgba(26, 24, 20, 0.16);
+  --inset-glint: rgba(255, 252, 244, 0.86);
+
+  --kicker: var(--palm);
+  --header-bg: rgba(247, 241, 227, 0.88);
+  --chip-bg: rgba(252, 247, 235, 0.84);
+  --chip-line: rgba(138, 97, 30, 0.28);
+  --link-bg-hover: rgba(232, 222, 200, 0.7);
+
+  --hero-a: rgba(184, 137, 58, 0.14);
+  --hero-b: rgba(26, 24, 20, 0.06);
+  --hero-c: rgba(184, 137, 58, 0.08);
+
+  /* interactive primitives */
+  --on-accent: #fcf7eb; /* cream text on a brass-filled surface */
+  --btn-primary-bg: var(--lagoon-deep);
+  --btn-primary-bg-hover: #6e4d18;
+  --btn-primary-text: var(--on-accent);
+  --btn-secondary-bg: rgba(252, 247, 235, 0.74);
+  --btn-secondary-bg-hover: rgba(252, 247, 235, 0.96);
+  --btn-secondary-text: var(--sea-ink);
+  --btn-secondary-border: var(--line);
+
+  --input-bg: rgba(252, 247, 235, 0.86);
+  --input-border: var(--line);
+  --input-border-focus: var(--lagoon-deep);
+  --focus-ring: rgba(184, 137, 58, 0.28);
+
+  --selection-bg: rgba(184, 137, 58, 0.32);
+
+  /* danger (light) */
+  --danger-bg: rgba(180, 60, 40, 0.08);
+  --danger-border: rgba(180, 60, 40, 0.32);
+  --danger-fg: #9a3320;
+  --danger-bg-hover: rgba(180, 60, 40, 0.14);
 }
 
+/* Dark (midnight foyer alternate) ----------------------------------------- */
 :root[data-theme="dark"] {
-  --sea-ink: #d7ece8;
-  --sea-ink-soft: #afcdc8;
-  --lagoon: #60d7cf;
-  --lagoon-deep: #8de5db;
-  --palm: #6ec89a;
-  --sand: #0f1a1e;
-  --foam: #101d22;
-  --surface: rgba(16, 30, 34, 0.8);
-  --surface-strong: rgba(15, 27, 31, 0.92);
-  --line: rgba(141, 229, 219, 0.18);
-  --inset-glint: rgba(194, 247, 238, 0.14);
-  --kicker: #b8efe5;
-  --bg-base: #0a1418;
-  --header-bg: rgba(10, 20, 24, 0.8);
-  --chip-bg: rgba(13, 28, 32, 0.9);
-  --chip-line: rgba(141, 229, 219, 0.24);
-  --link-bg-hover: rgba(24, 44, 49, 0.8);
-  --hero-a: rgba(96, 215, 207, 0.18);
-  --hero-b: rgba(110, 200, 154, 0.12);
+  --sea-ink: #ece4d2;
+  --sea-ink-soft: #a39a87;
+
+  --lagoon: #d4a558;
+  --lagoon-deep: #c79444;
+  --palm: #d4a558;
+
+  --sand: #221d15;
+  --foam: #1c1812;
+  --bg-base: #14110b;
+
+  --surface: rgba(28, 24, 18, 0.82);
+  --surface-strong: rgba(34, 29, 21, 0.94);
+  --line: rgba(236, 228, 210, 0.16);
+  --inset-glint: rgba(236, 228, 210, 0.06);
+
+  --kicker: var(--palm);
+  --header-bg: rgba(20, 17, 11, 0.86);
+  --chip-bg: rgba(34, 29, 21, 0.78);
+  --chip-line: rgba(212, 165, 88, 0.32);
+  --link-bg-hover: rgba(40, 34, 24, 0.84);
+
+  --hero-a: rgba(212, 165, 88, 0.14);
+  --hero-b: rgba(236, 228, 210, 0.04);
+  --hero-c: rgba(212, 165, 88, 0.08);
+
+  --on-accent: #14110b;
+  --btn-primary-bg: var(--lagoon);
+  --btn-primary-bg-hover: #e2b76d;
+  --btn-primary-text: var(--on-accent);
+  --btn-secondary-bg: rgba(34, 29, 21, 0.7);
+  --btn-secondary-bg-hover: rgba(46, 38, 26, 0.92);
+  --btn-secondary-text: var(--sea-ink);
+  --btn-secondary-border: var(--line);
+
+  --input-bg: rgba(20, 17, 11, 0.6);
+  --input-border: var(--line);
+  --input-border-focus: var(--lagoon);
+  --focus-ring: rgba(212, 165, 88, 0.32);
+
+  --selection-bg: rgba(212, 165, 88, 0.28);
+
+  /* danger (dark) */
+  --danger-bg: rgba(220, 110, 90, 0.14);
+  --danger-border: rgba(220, 110, 90, 0.38);
+  --danger-fg: #e89a82;
+  --danger-bg-hover: rgba(220, 110, 90, 0.22);
 }
 
+/* Auto (system) — when no explicit theme is set, inherit OS preference.
+   Default tokens above are LIGHT, so the dark overrides only fire when the
+   OS is dark and the user hasn't pinned a mode. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --sea-ink: #d7ece8;
-    --sea-ink-soft: #afcdc8;
-    --lagoon: #60d7cf;
-    --lagoon-deep: #8de5db;
-    --palm: #6ec89a;
-    --sand: #0f1a1e;
-    --foam: #101d22;
-    --surface: rgba(16, 30, 34, 0.8);
-    --surface-strong: rgba(15, 27, 31, 0.92);
-    --line: rgba(141, 229, 219, 0.18);
-    --inset-glint: rgba(194, 247, 238, 0.14);
-    --kicker: #b8efe5;
-    --bg-base: #0a1418;
-    --header-bg: rgba(10, 20, 24, 0.8);
-    --chip-bg: rgba(13, 28, 32, 0.9);
-    --chip-line: rgba(141, 229, 219, 0.24);
-    --link-bg-hover: rgba(24, 44, 49, 0.8);
-    --hero-a: rgba(96, 215, 207, 0.18);
-    --hero-b: rgba(110, 200, 154, 0.12);
+    --sea-ink: #ece4d2;
+    --sea-ink-soft: #a39a87;
+
+    --lagoon: #d4a558;
+    --lagoon-deep: #c79444;
+    --palm: #d4a558;
+
+    --sand: #221d15;
+    --foam: #1c1812;
+    --bg-base: #14110b;
+
+    --surface: rgba(28, 24, 18, 0.82);
+    --surface-strong: rgba(34, 29, 21, 0.94);
+    --line: rgba(236, 228, 210, 0.16);
+    --inset-glint: rgba(236, 228, 210, 0.06);
+
+    --kicker: var(--palm);
+    --header-bg: rgba(20, 17, 11, 0.86);
+    --chip-bg: rgba(34, 29, 21, 0.78);
+    --chip-line: rgba(212, 165, 88, 0.32);
+    --link-bg-hover: rgba(40, 34, 24, 0.84);
+
+    --hero-a: rgba(212, 165, 88, 0.14);
+    --hero-b: rgba(236, 228, 210, 0.04);
+    --hero-c: rgba(212, 165, 88, 0.08);
+
+    --on-accent: #14110b;
+    --btn-primary-bg: var(--lagoon);
+    --btn-primary-bg-hover: #e2b76d;
+    --btn-primary-text: var(--on-accent);
+    --btn-secondary-bg: rgba(34, 29, 21, 0.7);
+    --btn-secondary-bg-hover: rgba(46, 38, 26, 0.92);
+    --btn-secondary-text: var(--sea-ink);
+    --btn-secondary-border: var(--line);
+
+    --input-bg: rgba(20, 17, 11, 0.6);
+    --input-border: var(--line);
+    --input-border-focus: var(--lagoon);
+    --focus-ring: rgba(212, 165, 88, 0.32);
+
+    --selection-bg: rgba(212, 165, 88, 0.28);
+
+    --danger-bg: rgba(220, 110, 90, 0.14);
+    --danger-border: rgba(220, 110, 90, 0.38);
+    --danger-fg: #e89a82;
+    --danger-bg-hover: rgba(220, 110, 90, 0.22);
   }
 }
 
@@ -84,70 +187,79 @@ body,
   min-height: 100%;
 }
 
+html {
+  background-color: var(--bg-base);
+}
+
+::selection {
+  background: var(--selection-bg);
+}
+
 body {
   margin: 0;
   color: var(--sea-ink);
   font-family: var(--font-sans);
   background-color: var(--bg-base);
-  background:
-    radial-gradient(1100px 620px at -8% -10%, var(--hero-a), transparent 58%),
-    radial-gradient(1050px 620px at 112% -12%, var(--hero-b), transparent 62%),
-    radial-gradient(720px 380px at 50% 115%, rgba(79, 184, 178, 0.1), transparent 68%),
-    linear-gradient(
-      180deg,
-      color-mix(in oklab, var(--sand) 68%, white) 0%,
-      var(--foam) 44%,
-      var(--bg-base) 100%
-    );
-  overflow-x: hidden;
+  /* Editorial paper: subtle warm radial wash + a hairline column rule
+     in the gutter. No saturated radials — the surface should read as
+     printed paper, not glowing glass. */
+  background-image:
+    radial-gradient(1200px 720px at 88% -8%, var(--hero-a), transparent 62%),
+    radial-gradient(900px 540px at -10% 110%, var(--hero-c), transparent 64%),
+    linear-gradient(180deg, var(--foam) 0%, var(--bg-base) 100%);
+  overflow-x: clip;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Faint vertical column rule down the page — magazine layout cue.
+   Sits behind everything via z-index: -1 and is invisible on narrow
+   viewports (the page is single-column there anyway). */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: -1;
-  opacity: 0.28;
-  background:
-    radial-gradient(circle at 20% 15%, rgba(255, 255, 255, 0.8), transparent 34%),
-    radial-gradient(circle at 78% 26%, rgba(79, 184, 178, 0.2), transparent 42%),
-    radial-gradient(circle at 42% 82%, rgba(47, 106, 74, 0.14), transparent 36%);
+  background-image: linear-gradient(
+    to right,
+    transparent calc(50% - 0.5px),
+    var(--line) calc(50% - 0.5px),
+    var(--line) calc(50% + 0.5px),
+    transparent calc(50% + 0.5px)
+  );
+  opacity: 0;
 }
 
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: -1;
-  opacity: 0.14;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
-  background-size: 28px 28px;
-  mask-image: radial-gradient(circle at 50% 30%, black, transparent 78%);
+@media (min-width: 1100px) {
+  body::before {
+    opacity: 0.32;
+  }
 }
 
 a {
   color: var(--lagoon-deep);
-  text-decoration-color: rgba(50, 143, 151, 0.4);
+  text-decoration-color: color-mix(in oklab, var(--lagoon-deep) 50%, transparent);
   text-decoration-thickness: 1px;
-  text-underline-offset: 2px;
+  text-underline-offset: 3px;
 }
 
 a:hover {
-  color: #246f76;
+  color: var(--sea-ink);
+  text-decoration-color: var(--sea-ink);
+}
+
+code,
+.font-mono {
+  font-family: var(--font-mono);
 }
 
 code {
-  font-size: 0.9em;
+  font-size: 0.88em;
   border: 1px solid var(--line);
-  background: color-mix(in oklab, var(--surface-strong) 82%, white 18%);
-  border-radius: 7px;
-  padding: 2px 7px;
+  background: color-mix(in oklab, var(--surface-strong) 84%, var(--bg-base) 16%);
+  border-radius: 4px;
+  padding: 1px 6px;
 }
 
 pre code {
@@ -165,34 +277,67 @@ pre code {
 }
 
 .display-title {
-  font-family: "Fraunces", Georgia, serif;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  letter-spacing: -0.012em;
+  /* Editorial leading — tight for big serif headlines. */
+  line-height: 1.02;
 }
 
+.display-title em {
+  font-style: italic;
+  font-weight: 500;
+  color: var(--lagoon-deep);
+}
+
+/* Hairline-bordered plate. Replaces the previous glassy "island" treatment
+   with a flatter, paper-like surface. The shadow is intentionally tiny —
+   editorial layouts don't lift; they sit. */
 .island-shell {
   border: 1px solid var(--line);
-  background: linear-gradient(165deg, var(--surface-strong), var(--surface));
+  background: var(--surface-strong);
   box-shadow:
     0 1px 0 var(--inset-glint) inset,
-    0 22px 44px rgba(30, 90, 72, 0.1),
-    0 6px 18px rgba(23, 58, 64, 0.08);
-  backdrop-filter: blur(4px);
+    0 1px 2px rgba(26, 24, 20, 0.04),
+    0 12px 28px -18px rgba(26, 24, 20, 0.18);
+  backdrop-filter: blur(2px);
 }
 
 .feature-card {
-  background: linear-gradient(
-    165deg,
-    color-mix(in oklab, var(--surface-strong) 93%, white 7%),
-    var(--surface)
-  );
-  box-shadow:
-    0 1px 0 var(--inset-glint) inset,
-    0 18px 34px rgba(30, 90, 72, 0.1),
-    0 4px 14px rgba(23, 58, 64, 0.06);
+  background: var(--surface-strong);
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+/* Editorial hover: lifts a fraction, gains a brass top-rule. The rule is
+   drawn with a pseudo-element clipped to the card's rounded corners. */
+.feature-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--lagoon);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .feature-card:hover {
   transform: translateY(-2px);
-  border-color: color-mix(in oklab, var(--lagoon-deep) 35%, var(--line));
+  border-color: color-mix(in oklab, var(--lagoon) 36%, var(--line));
+  box-shadow:
+    0 1px 0 var(--inset-glint) inset,
+    0 18px 36px -20px rgba(26, 24, 20, 0.32);
+}
+
+.feature-card:hover::before {
+  transform: scaleX(1);
 }
 
 button,
@@ -205,12 +350,48 @@ a {
     transform 180ms ease;
 }
 
+/* Small-caps brass eyebrow. The thin top-rule turns it into a magazine
+   section kicker without a wrapper element. */
 .island-kicker {
-  letter-spacing: 0.16em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   font-weight: 700;
-  font-size: 0.69rem;
+  font-size: 0.66rem;
   color: var(--kicker);
+}
+
+.island-kicker::before {
+  content: "";
+  display: inline-block;
+  width: 22px;
+  height: 1px;
+  background: var(--kicker);
+}
+
+/* Vertical brass rule for section heroes. Usage:
+   <section class="hero-rule"> ... </section> */
+.hero-rule {
+  position: relative;
+  padding-left: 1.25rem;
+}
+
+.hero-rule::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.4rem;
+  bottom: 0.4rem;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--lagoon), transparent);
+}
+
+@media (min-width: 640px) {
+  .hero-rule {
+    padding-left: 1.5rem;
+  }
 }
 
 .nav-link {
@@ -219,6 +400,7 @@ a {
   align-items: center;
   text-decoration: none;
   color: var(--sea-ink-soft);
+  font-weight: 500;
 }
 
 .nav-link::after {
@@ -227,10 +409,10 @@ a {
   left: 0;
   bottom: -6px;
   width: 100%;
-  height: 2px;
+  height: 1px;
   transform: scaleX(0);
   transform-origin: left;
-  background: linear-gradient(90deg, var(--lagoon), #7ed3bf);
+  background: var(--lagoon);
   transition: transform 170ms ease;
 }
 
@@ -244,15 +426,9 @@ a {
   transform: scaleX(1);
 }
 
-@media (max-width: 640px) {
-  .nav-link::after {
-    bottom: -4px;
-  }
-}
-
 .site-footer {
   border-top: 1px solid var(--line);
-  background: color-mix(in oklab, var(--header-bg) 84%, transparent 16%);
+  background: color-mix(in oklab, var(--header-bg) 90%, transparent 10%);
 }
 
 .rise-in {
@@ -262,10 +438,107 @@ a {
 @keyframes rise-in {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* ---------------------------------------------------------------------------
+   Interactive primitives — use these utility classes to keep buttons and
+   inputs consistent across light/dark without hard-coded colors.
+   --------------------------------------------------------------------------- */
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border: 1px solid color-mix(in oklab, var(--btn-primary-bg) 80%, transparent);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.16) inset,
+    0 10px 24px -14px color-mix(in oklab, var(--btn-primary-bg) 80%, transparent);
+}
+
+.btn-primary:hover {
+  background: var(--btn-primary-bg-hover);
+  color: var(--btn-primary-text);
+  transform: translateY(-1px);
+}
+
+.btn-primary:focus-visible {
+  outline: 2px solid var(--btn-primary-bg-hover);
+  outline-offset: 2px;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  border: 1px solid var(--btn-secondary-border);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+
+.btn-secondary:hover {
+  background: var(--btn-secondary-bg-hover);
+  color: var(--btn-secondary-text);
+  border-color: color-mix(in oklab, var(--lagoon) 36%, var(--btn-secondary-border));
+  transform: translateY(-1px);
+}
+
+.btn-secondary:focus-visible {
+  outline: 2px solid var(--lagoon-deep);
+  outline-offset: 2px;
+}
+
+.input-field {
+  background: var(--input-bg);
+  color: var(--sea-ink);
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  backdrop-filter: blur(2px);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.input-field::placeholder {
+  color: color-mix(in oklab, var(--sea-ink-soft) 80%, transparent);
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--input-border-focus);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+/* Badge — small editorial label for room categories, doc types, etc. */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.18rem 0.55rem;
+  border: 1px solid var(--chip-line);
+  background: var(--chip-bg);
+  color: var(--lagoon-deep);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 3px;
 }

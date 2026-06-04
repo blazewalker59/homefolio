@@ -155,19 +155,22 @@ function DocumentsPage() {
 
   return (
     <main className="page-wrap px-4 pb-8 pt-14">
-      <section className="island-shell rise-in relative overflow-hidden rounded-[2rem] px-6 py-10 sm:px-10 sm:py-14">
-        <div className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(79,184,178,0.32),transparent_66%)]" />
-        <p className="island-kicker mb-3">Documents</p>
-        <h1 className="display-title mb-5 max-w-3xl text-4xl leading-[1.02] font-bold tracking-tight text-[var(--sea-ink)] sm:text-6xl">
-          {home.name || "My Home"}
+      <section className="rise-in border-b border-[var(--line)] pb-10 sm:pb-12">
+        <div className="mb-6 flex items-center justify-between text-[0.66rem] font-semibold uppercase tracking-[0.22em] text-[var(--sea-ink-soft)]">
+          <span>{home.name || "My Home"}</span>
+          <span className="font-mono text-[var(--lagoon-deep)]">No. 004</span>
+        </div>
+        <p className="island-kicker mb-4">The paper trail</p>
+        <h1 className="display-title mb-5 max-w-3xl text-5xl text-[var(--sea-ink)] sm:text-7xl">
+          Documents<span className="text-[var(--lagoon-deep)]">.</span>
         </h1>
-        <p className="mb-8 max-w-2xl text-base text-[var(--sea-ink-soft)] sm:text-lg">
-          Upload and manage receipts, manuals, warranties, and other documents.
+        <p className="mb-8 max-w-2xl font-serif text-lg italic text-[var(--sea-ink-soft)] sm:text-xl">
+          Receipts, manuals, warranties — properly filed.
         </p>
 
         <button
           onClick={() => setShowUpload(true)}
-          className="rounded-full bg-[var(--lagoon-deep)] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          className="rounded-sm bg-[var(--lagoon-deep)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--on-accent)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
         >
           Upload Document
         </button>
@@ -185,7 +188,7 @@ function DocumentsPage() {
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <button
                   onClick={() => setSelectedEntity({ type: "home", id: home.id })}
-                  className="rounded-lg border border-[var(--line)] bg-white p-4 text-left transition hover:border-[var(--lagoon-deep)]"
+                  className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] p-4 text-left transition hover:border-[var(--lagoon-deep)]"
                 >
                   <div className="font-medium text-[var(--sea-ink)]">Home</div>
                   <div className="text-xs text-[var(--sea-ink-soft)]">General home documents</div>
@@ -195,7 +198,7 @@ function DocumentsPage() {
                   <button
                     key={room.id}
                     onClick={() => setSelectedEntity({ type: "room", id: room.id })}
-                    className="rounded-lg border border-[var(--line)] bg-white p-4 text-left transition hover:border-[var(--lagoon-deep)]"
+                    className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] p-4 text-left transition hover:border-[var(--lagoon-deep)]"
                   >
                     <div className="font-medium text-[var(--sea-ink)]">{room.name}</div>
                     <div className="text-xs text-[var(--sea-ink-soft)]">Room</div>
@@ -206,7 +209,7 @@ function DocumentsPage() {
                   <button
                     key={system.id}
                     onClick={() => setSelectedEntity({ type: "system", id: system.id })}
-                    className="rounded-lg border border-[var(--line)] bg-white p-4 text-left transition hover:border-[var(--lagoon-deep)]"
+                    className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] p-4 text-left transition hover:border-[var(--lagoon-deep)]"
                   >
                     <div className="font-medium text-[var(--sea-ink)]">{system.name}</div>
                     <div className="text-xs text-[var(--sea-ink-soft)]">System</div>
@@ -217,7 +220,7 @@ function DocumentsPage() {
                   <button
                     key={item.id}
                     onClick={() => setSelectedEntity({ type: "item", id: item.id })}
-                    className="rounded-lg border border-[var(--line)] bg-white p-4 text-left transition hover:border-[var(--lagoon-deep)]"
+                    className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] p-4 text-left transition hover:border-[var(--lagoon-deep)]"
                   >
                     <div className="font-medium text-[var(--sea-ink)]">{item.name}</div>
                     <div className="text-xs text-[var(--sea-ink-soft)]">Item</div>
@@ -227,7 +230,7 @@ function DocumentsPage() {
 
               <button
                 onClick={() => setShowUpload(false)}
-                className="mt-4 rounded-full border border-[var(--line)] bg-white px-6 py-3 text-sm font-semibold text-[var(--sea-ink)] transition hover:bg-gray-50"
+                className="mt-4 rounded-full border border-[var(--line)] bg-[var(--surface-strong)] px-6 py-3 text-sm font-semibold text-[var(--sea-ink)] transition hover:bg-[var(--link-bg-hover)]"
               >
                 Cancel
               </button>
@@ -254,7 +257,7 @@ function DocumentsPage() {
 
               <button
                 onClick={() => setShowUpload(false)}
-                className="mt-4 rounded-full border border-[var(--line)] bg-white px-6 py-3 text-sm font-semibold text-[var(--sea-ink)] transition hover:bg-gray-50"
+                className="mt-4 rounded-full border border-[var(--line)] bg-[var(--surface-strong)] px-6 py-3 text-sm font-semibold text-[var(--sea-ink)] transition hover:bg-[var(--link-bg-hover)]"
               >
                 Cancel
               </button>
@@ -277,7 +280,7 @@ function DocumentsPage() {
             {documents.map((doc) => (
               <div
                 key={doc.id}
-                className="island-shell rounded-lg border border-[var(--line)] bg-white p-4"
+                className="island-shell rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] p-4"
               >
                 {editing === doc.id ? (
                   <div className="space-y-3">
@@ -289,7 +292,7 @@ function DocumentsPage() {
                         <select
                           value={editType}
                           onChange={(e) => setEditType(e.target.value as DocumentType)}
-                          className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm text-[var(--sea-ink)]"
+                          className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-2 text-sm text-[var(--sea-ink)]"
                         >
                           {DOCUMENT_TYPE_OPTIONS.map((t) => (
                             <option key={t} value={t}>
@@ -310,7 +313,7 @@ function DocumentsPage() {
                               setEditEntityType(newType);
                               if (newType === "home") setEditEntityId(home.id);
                             }}
-                            className="rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm text-[var(--sea-ink)]"
+                            className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-2 text-sm text-[var(--sea-ink)]"
                           >
                             <option value="home">Home</option>
                             <option value="room">Room</option>
@@ -321,7 +324,7 @@ function DocumentsPage() {
                             <select
                               value={editEntityId}
                               onChange={(e) => setEditEntityId(e.target.value)}
-                              className="flex-1 rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm text-[var(--sea-ink)]"
+                              className="flex-1 rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-2 text-sm text-[var(--sea-ink)]"
                             >
                               <option value="">Select...</option>
                               {editEntityType === "room" &&
@@ -355,7 +358,7 @@ function DocumentsPage() {
                         value={editNotes}
                         onChange={(e) => setEditNotes(e.target.value)}
                         rows={2}
-                        className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm text-[var(--sea-ink)]"
+                        className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-2 text-sm text-[var(--sea-ink)]"
                         placeholder="Optional notes..."
                       />
                     </div>
@@ -363,14 +366,14 @@ function DocumentsPage() {
                       <button
                         onClick={() => saveEdit(doc.id)}
                         disabled={saving}
-                        className="rounded-lg bg-[var(--lagoon-deep)] px-4 py-1.5 text-xs font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+                        className="rounded-lg bg-[var(--lagoon-deep)] px-4 py-1.5 text-xs font-medium text-[var(--on-accent)] transition hover:opacity-90 disabled:opacity-50"
                       >
                         {saving ? "Saving..." : "Save"}
                       </button>
                       <button
                         onClick={cancelEdit}
                         disabled={saving}
-                        className="rounded-lg border border-[var(--line)] bg-white px-4 py-1.5 text-xs font-medium text-[var(--sea-ink)] transition hover:bg-gray-50"
+                        className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-1.5 text-xs font-medium text-[var(--sea-ink)] transition hover:bg-[var(--link-bg-hover)]"
                       >
                         Cancel
                       </button>
@@ -381,10 +384,10 @@ function DocumentsPage() {
                     <div className="min-w-0 flex-1">
                       <div className="font-medium text-[var(--sea-ink)]">{doc.filename}</div>
                       <div className="mt-1 flex flex-wrap items-center gap-2">
-                        <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-[var(--sea-ink-soft)]">
+                        <span className="rounded bg-[var(--chip-bg)] px-2 py-0.5 text-xs text-[var(--sea-ink-soft)]">
                           {DOCUMENT_TYPE_LABELS[doc.type] || doc.type}
                         </span>
-                        <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-[var(--sea-ink-soft)]">
+                        <span className="rounded bg-[var(--chip-bg)] px-2 py-0.5 text-xs text-[var(--sea-ink-soft)]">
                           {getEntityName(doc.entityType, doc.entityId)}
                         </span>
                         <span className="text-xs text-[var(--sea-ink-soft)]">

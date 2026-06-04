@@ -20,152 +20,170 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
+type Section = {
+  number: string;
+  to: "/rooms" | "/systems" | "/items" | "/documents";
+  title: string;
+  blurb: string;
+};
+
+const SECTIONS: Section[] = [
+  {
+    number: "01",
+    to: "/rooms",
+    title: "Rooms",
+    blurb: "Bedrooms, bathrooms, the kitchen — the spaces that hold the rest.",
+  },
+  {
+    number: "02",
+    to: "/systems",
+    title: "Systems",
+    blurb: "HVAC, electrical, plumbing — the quiet machinery behind the walls.",
+  },
+  {
+    number: "03",
+    to: "/items",
+    title: "Items",
+    blurb: "Furniture, fixtures, appliances. Everything you'd take with you.",
+  },
+  {
+    number: "04",
+    to: "/documents",
+    title: "Documents",
+    blurb: "Receipts, manuals, warranties. The paper trail, properly filed.",
+  },
+];
+
 function Dashboard() {
   const { home } = Route.useLoaderData();
+  const stats: Array<{ kicker: string; value: string }> = [];
+
+  if (home.yearBuilt) {
+    stats.push({ kicker: "Year Built", value: String(home.yearBuilt) });
+  }
+  if (home.sqft) {
+    stats.push({ kicker: "Square Footage", value: `${home.sqft.toLocaleString()} sqft` });
+  }
+  if (home.bedCount || home.bathCount) {
+    stats.push({
+      kicker: "Layout",
+      value: `${home.bedCount ?? 0} bed · ${home.bathCount ?? 0} bath`,
+    });
+  }
 
   return (
-    <main className="page-wrap px-4 pb-8 pt-14">
-      <section className="island-shell rise-in relative overflow-hidden rounded-[2rem] px-6 py-10 sm:px-10 sm:py-14">
-        <div className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(79,184,178,0.32),transparent_66%)]" />
-        <div className="pointer-events-none absolute -bottom-20 -right-20 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(47,106,74,0.18),transparent_66%)]" />
-        <p className="island-kicker mb-3">Dashboard</p>
-        <h1 className="display-title mb-5 max-w-3xl text-4xl leading-[1.02] font-bold tracking-tight text-[var(--sea-ink)] sm:text-6xl">
+    <main className="page-wrap px-4 pb-12 pt-12 sm:pt-16">
+      {/* Magazine cover ------------------------------------------------ */}
+      <section className="rise-in border-b border-[var(--line)] pb-10 sm:pb-14">
+        <div className="mb-6 flex items-center justify-between text-[0.66rem] font-semibold uppercase tracking-[0.22em] text-[var(--sea-ink-soft)]">
+          <span>The Residence</span>
+          <span className="font-mono text-[var(--lagoon-deep)]">No. 001</span>
+        </div>
+
+        <p className="island-kicker mb-4">A property record</p>
+
+        <h1 className="display-title mb-6 max-w-4xl text-5xl text-[var(--sea-ink)] sm:text-7xl">
           {home.name || "My Home"}
+          <span className="ml-1 text-[var(--lagoon-deep)]">.</span>
         </h1>
-        <p className="mb-8 max-w-2xl text-base text-[var(--sea-ink-soft)] sm:text-lg">
+
+        <p className="max-w-2xl font-serif text-lg italic text-[var(--sea-ink-soft)] sm:text-xl">
           {home.address}
         </p>
-      </section>
 
-      <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {home.yearBuilt && (
-          <article className="island-shell feature-card rise-in rounded-2xl p-5">
-            <h2 className="mb-2 text-sm font-semibold text-[var(--sea-ink-soft)]">Year Built</h2>
-            <p className="m-0 text-2xl font-bold text-[var(--sea-ink)]">{home.yearBuilt}</p>
-          </article>
-        )}
-        {home.sqft && (
-          <article className="island-shell feature-card rise-in rounded-2xl p-5">
-            <h2 className="mb-2 text-sm font-semibold text-[var(--sea-ink-soft)]">
-              Square Footage
-            </h2>
-            <p className="m-0 text-2xl font-bold text-[var(--sea-ink)]">
-              {home.sqft.toLocaleString()} sqft
-            </p>
-          </article>
-        )}
-        {(home.bedCount || home.bathCount) && (
-          <article className="island-shell feature-card rise-in rounded-2xl p-5">
-            <h2 className="mb-2 text-sm font-semibold text-[var(--sea-ink-soft)]">Layout</h2>
-            <p className="m-0 text-2xl font-bold text-[var(--sea-ink)]">
-              {home.bedCount ?? 0} bed / {home.bathCount ?? 0} bath
-            </p>
-          </article>
+        {stats.length > 0 && (
+          <dl className="mt-10 grid gap-y-6 border-t border-[var(--line)] pt-6 sm:grid-cols-3 sm:gap-x-10">
+            {stats.map((s) => (
+              <div key={s.kicker} className="flex flex-col gap-1">
+                <dt className="text-[0.66rem] font-semibold uppercase tracking-[0.22em] text-[var(--sea-ink-soft)]">
+                  {s.kicker}
+                </dt>
+                <dd className="m-0 font-serif text-3xl font-bold text-[var(--sea-ink)]">
+                  {s.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
         )}
       </section>
 
-      <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Link
-          to="/rooms"
-          className="island-shell feature-card rise-in flex items-center justify-between rounded-2xl p-6 no-underline transition hover:-translate-y-0.5 hover:shadow-lg"
-        >
-          <div>
-            <h2 className="text-lg font-semibold text-[var(--sea-ink)]">Rooms</h2>
-            <p className="mt-1 text-sm text-[var(--sea-ink-soft)]">
-              Manage bedrooms, bathrooms, kitchen, and more
-            </p>
-          </div>
-          <svg
-            className="h-6 w-6 text-[var(--sea-ink-soft)]"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </Link>
+      {/* Table of contents -------------------------------------------- */}
+      <section className="rise-in mt-12">
+        <div className="mb-6 flex items-baseline justify-between">
+          <p className="island-kicker">Contents</p>
+          <span className="font-mono text-xs text-[var(--sea-ink-soft)]">04 sections</span>
+        </div>
 
-        <Link
-          to="/systems"
-          className="island-shell feature-card rise-in flex items-center justify-between rounded-2xl p-6 no-underline transition hover:-translate-y-0.5 hover:shadow-lg"
-        >
-          <div>
-            <h2 className="text-lg font-semibold text-[var(--sea-ink)]">Systems</h2>
-            <p className="mt-1 text-sm text-[var(--sea-ink-soft)]">
-              Track HVAC, electrical, plumbing, and more
-            </p>
-          </div>
-          <svg
-            className="h-6 w-6 text-[var(--sea-ink-soft)]"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </Link>
-
-        <Link
-          to="/items"
-          className="island-shell feature-card rise-in flex items-center justify-between rounded-2xl p-6 no-underline transition hover:-translate-y-0.5 hover:shadow-lg"
-        >
-          <div>
-            <h2 className="text-lg font-semibold text-[var(--sea-ink)]">Items</h2>
-            <p className="mt-1 text-sm text-[var(--sea-ink-soft)]">
-              Catalog furniture, fixtures, appliances, and more
-            </p>
-          </div>
-          <svg
-            className="h-6 w-6 text-[var(--sea-ink-soft)]"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </Link>
-
-        <Link
-          to="/documents"
-          className="island-shell feature-card rise-in flex items-center justify-between rounded-2xl p-6 no-underline transition hover:-translate-y-0.5 hover:shadow-lg"
-        >
-          <div>
-            <h2 className="text-lg font-semibold text-[var(--sea-ink)]">Documents</h2>
-            <p className="mt-1 text-sm text-[var(--sea-ink-soft)]">
-              Upload receipts, manuals, warranties, and more
-            </p>
-          </div>
-          <svg
-            className="h-6 w-6 text-[var(--sea-ink-soft)]"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </Link>
+        <ol className="m-0 list-none divide-y divide-[var(--line)] border-y border-[var(--line)] p-0">
+          {SECTIONS.map((s) => (
+            <li key={s.to} className="m-0">
+              <Link
+                to={s.to}
+                className="group flex items-center gap-5 py-5 no-underline transition hover:bg-[var(--link-bg-hover)] sm:gap-8 sm:py-6"
+              >
+                <span className="w-10 shrink-0 pl-3 font-mono text-sm text-[var(--lagoon-deep)] sm:pl-4 sm:text-base">
+                  {s.number}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h2 className="m-0 font-serif text-2xl font-bold text-[var(--sea-ink)] transition group-hover:text-[var(--lagoon-deep)] sm:text-3xl">
+                    {s.title}
+                  </h2>
+                  <p className="mt-1 max-w-xl text-sm text-[var(--sea-ink-soft)] sm:text-base">
+                    {s.blurb}
+                  </p>
+                </div>
+                <svg
+                  className="mr-3 h-5 w-5 shrink-0 text-[var(--sea-ink-soft)] transition group-hover:translate-x-1 group-hover:text-[var(--lagoon-deep)] sm:mr-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </Link>
+            </li>
+          ))}
+        </ol>
       </section>
 
-      <section className="island-shell mt-8 rounded-2xl p-6">
-        <p className="island-kicker mb-2">Next steps</p>
-        <ul className="m-0 list-none space-y-2 text-sm">
-          <li>
-            <Link to="/rooms" className="text-[var(--lagoon-deep)] underline hover:no-underline">
-              Add rooms to your home
+      {/* Editor's note ------------------------------------------------ */}
+      <aside className="rise-in mt-12 grid gap-6 sm:grid-cols-[1fr_2fr]">
+        <p className="island-kicker">Editor's note</p>
+        <div className="border-l border-[var(--line)] pl-5 sm:pl-7">
+          <p className="m-0 font-serif text-lg italic leading-relaxed text-[var(--sea-ink)]">
+            Begin with the rooms. Add a system or two. Catalogue the appliances you'd want a buyer —
+            or your future self — to find. The rest builds on itself.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-3 text-sm">
+            <Link
+              to="/rooms"
+              className="text-[var(--lagoon-deep)] underline-offset-4 hover:no-underline"
+            >
+              Add rooms
             </Link>
-          </li>
-          <li>
-            <Link to="/systems" className="text-[var(--lagoon-deep)] underline hover:no-underline">
-              Set up systems (HVAC, electrical, plumbing)
+            <span className="text-[var(--sea-ink-soft)]">·</span>
+            <Link
+              to="/systems"
+              className="text-[var(--lagoon-deep)] underline-offset-4 hover:no-underline"
+            >
+              Set up systems
             </Link>
-          </li>
-          <li>
-            <Link to="/items" className="text-[var(--lagoon-deep)] underline hover:no-underline">
-              Start cataloging items
+            <span className="text-[var(--sea-ink-soft)]">·</span>
+            <Link
+              to="/items"
+              className="text-[var(--lagoon-deep)] underline-offset-4 hover:no-underline"
+            >
+              Catalogue items
             </Link>
-          </li>
-        </ul>
-      </section>
+          </div>
+        </div>
+      </aside>
     </main>
   );
 }

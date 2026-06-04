@@ -117,7 +117,10 @@ export function DocumentList({ entityType, entityId }: DocumentListProps) {
   return (
     <div className="space-y-2">
       {documents.map((doc) => (
-        <div key={doc.id} className="rounded-lg border border-[var(--line)] bg-white p-3">
+        <div
+          key={doc.id}
+          className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] p-3"
+        >
           {editing === doc.id ? (
             <div className="space-y-3">
               <div>
@@ -127,7 +130,7 @@ export function DocumentList({ entityType, entityId }: DocumentListProps) {
                 <select
                   value={editType}
                   onChange={(e) => setEditType(e.target.value as DocumentType)}
-                  className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm text-[var(--sea-ink)]"
+                  className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-2 text-sm text-[var(--sea-ink)]"
                 >
                   {DOCUMENT_TYPE_OPTIONS.map((t) => (
                     <option key={t} value={t}>
@@ -144,7 +147,7 @@ export function DocumentList({ entityType, entityId }: DocumentListProps) {
                   value={editNotes}
                   onChange={(e) => setEditNotes(e.target.value)}
                   rows={2}
-                  className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm text-[var(--sea-ink)]"
+                  className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-2 text-sm text-[var(--sea-ink)]"
                   placeholder="Optional notes..."
                 />
               </div>
@@ -152,14 +155,14 @@ export function DocumentList({ entityType, entityId }: DocumentListProps) {
                 <button
                   onClick={() => saveEdit(doc.id)}
                   disabled={saving}
-                  className="rounded-lg bg-[var(--lagoon-deep)] px-4 py-1.5 text-xs font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+                  className="rounded-lg bg-[var(--lagoon-deep)] px-4 py-1.5 text-xs font-medium text-[var(--on-accent)] transition hover:opacity-90 disabled:opacity-50"
                 >
                   {saving ? "Saving..." : "Save"}
                 </button>
                 <button
                   onClick={cancelEdit}
                   disabled={saving}
-                  className="rounded-lg border border-[var(--line)] bg-white px-4 py-1.5 text-xs font-medium text-[var(--sea-ink)] transition hover:bg-gray-50"
+                  className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-1.5 text-xs font-medium text-[var(--sea-ink)] transition hover:bg-[var(--link-bg-hover)]"
                 >
                   Cancel
                 </button>
@@ -170,7 +173,7 @@ export function DocumentList({ entityType, entityId }: DocumentListProps) {
               <div className="min-w-0 flex-1">
                 <div className="font-medium text-[var(--sea-ink)]">{doc.filename}</div>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
-                  <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-[var(--sea-ink-soft)]">
+                  <span className="rounded bg-[var(--chip-bg)] px-2 py-0.5 text-xs text-[var(--sea-ink-soft)]">
                     {DOCUMENT_TYPE_LABELS[doc.type] || doc.type}
                   </span>
                   <span className="text-xs text-[var(--sea-ink-soft)]">
