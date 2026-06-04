@@ -63,6 +63,11 @@ const config = defineConfig({
   lint: { ignorePatterns: generatedFiles },
   resolve: { tsconfigPaths: true },
   plugins: appPlugins,
+  build: {
+    rollupOptions: {
+      external: ["cloudflare:workers"],
+    },
+  },
   test: {
     environment: "jsdom",
     globals: true,

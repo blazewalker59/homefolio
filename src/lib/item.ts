@@ -4,14 +4,15 @@
  * Items are created from templates and snapshot the template's fields at
  * creation time. An item can belong to a Room, a System (or sub-unit), or
  * both (dual membership). Moving an item between rooms generates an activity
- * entry (placeholder for Slice 9). Orphan protection: items cannot be deleted
- * if they have attached documents.
+ * entry. Orphan protection: items cannot be deleted if they have attached
+ * documents.
  */
 
 import { and, eq, isNull, or } from "drizzle-orm";
 import { getDb } from "@/db/client";
-import { items, itemTemplates } from "@/db/schema";
+import { items, itemTemplates, rooms } from "@/db/schema";
 import type { TemplateField } from "@/db/schema";
+import { logItemCreated, logItemMoved } from "@/lib/activity";
 
 /**
  * Seed built-in templates into the database.
@@ -184,7 +185,8 @@ export async function deleteCustomTemplate(templateId: string): Promise<void> {
  * Create an item from a template.
  *
  * Snapshots the template's fields at creation time. The item can be assigned
- * to a Room, a System (or sub-unit), or both (dual membership).
+ * to a Room, a System (or sub-unit), or both (dual membership). Auto-generates
+ * an activity entry when createdBy is provided.
  */
 export async function createItem(params: {
   homeId: string;
@@ -193,6 +195,7 @@ export async function createItem(params: {
   roomId?: string;
   systemUnitId?: string;
   fields: Record<string, unknown>;
+  createdBy?: string;
 }) {
   const db = await getDb();
   const [created] = await db
@@ -206,6 +209,16 @@ export async function createItem(params: {
       fields: params.fields,
     })
     .returning();
+
+  if (params.createdBy) {
+    await logItemCreated({
+      homeId: params.homeId,
+      itemId: created.id,
+      itemName: params.name,
+      createdBy: params.createdBy,
+    });
+  }
+
   return created;
 }
 
@@ -298,11 +311,44 @@ export async function updateItem(
 /**
  * Move an item to a different room.
  *
- * Records the move (placeholder for activity log in Slice 9).
+ * Records the move as an activity entry when createdBy is provided.
  */
-export async function moveItem(itemId: string, newRoomId: string | null) {
-  // TODO: Record activity entry for the move (Slice 9).
-  return updateItem(itemId, { roomId: newRoomId });
+export async function moveItem(itemId: string, newRoomId: string | null, createdBy?: string) {
+  const db = await getDb();
+
+  const item = await db.query.items.findFirst({
+    where: eq(items.id, itemId),
+    with: { room: true },
+  });
+
+  if (!item) {
+    throw new Error("Item not found");
+  }
+
+  const fromRoomName = item.room?.name ?? null;
+  let toRoomName: string | null = null;
+
+  if (newRoomId) {
+    const toRoom = await db.query.rooms.findFirst({
+      where: eq(rooms.id, newRoomId),
+    });
+    toRoomName = toRoom?.name ?? null;
+  }
+
+  const updated = await updateItem(itemId, { roomId: newRoomId });
+
+  if (createdBy) {
+    await logItemMoved({
+      homeId: item.homeId,
+      itemId: item.id,
+      itemName: item.name,
+      fromRoomName,
+      toRoomName,
+      createdBy,
+    });
+  }
+
+  return updated;
 }
 
 /**

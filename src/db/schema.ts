@@ -341,6 +341,43 @@ export const documents = pgTable(
 );
 
 // ──────────────────────────────────────────────────────────────────────────────
+// Activity
+//
+// A chronological log of events in the home. Each activity has a type from a
+// fixed list (maintenance, purchase, improvement, repair, inspection, other),
+// a timestamp, and a description. Activities can optionally link to a Room,
+// System, or Item via entityType/entityId (polymorphic). Users can manually
+// create entries for things that happened outside the app or before signup.
+// Auto-generation hooks fire on user actions (item creation, item movement).
+// ──────────────────────────────────────────────────────────────────────────────
+
+export const activities = pgTable(
+  "activities",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    homeId: uuid("home_id")
+      .notNull()
+      .references(() => homes.id, { onDelete: "cascade" }),
+    type: text("type").notNull(), // 'maintenance' | 'purchase' | 'improvement' | 'repair' | 'inspection' | 'other'
+    timestamp: timestamp("timestamp", { withTimezone: true }).notNull(),
+    description: text("description").notNull(),
+    entityType: text("entity_type"), // 'room' | 'system' | 'item' | null
+    entityId: uuid("entity_id"),
+    notes: text("notes"),
+    createdBy: uuid("created_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("activities_home_idx").on(t.homeId),
+    index("activities_timestamp_idx").on(t.homeId, t.timestamp),
+    index("activities_entity_idx").on(t.entityType, t.entityId),
+  ],
+);
+
+// ──────────────────────────────────────────────────────────────────────────────
 // Relations
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -366,6 +403,7 @@ export const homesRelations = relations(homes, ({ one, many }) => ({
   items: many(items),
   itemTemplates: many(itemTemplates),
   documents: many(documents),
+  activities: many(activities),
 }));
 
 export const roomsRelations = relations(rooms, ({ one, many }) => ({
@@ -398,4 +436,9 @@ export const itemsRelations = relations(items, ({ one }) => ({
 export const documentsRelations = relations(documents, ({ one }) => ({
   home: one(homes, { fields: [documents.homeId], references: [homes.id] }),
   uploader: one(users, { fields: [documents.uploadedBy], references: [users.id] }),
+}));
+
+export const activitiesRelations = relations(activities, ({ one }) => ({
+  home: one(homes, { fields: [activities.homeId], references: [homes.id] }),
+  creator: one(users, { fields: [activities.createdBy], references: [users.id] }),
 }));

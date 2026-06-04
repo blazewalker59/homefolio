@@ -352,13 +352,44 @@ describe("moveItem", () => {
   });
 
   it("moves an item to a different room", async () => {
+    const existingItem = {
+      id: "item-123",
+      homeId: "home-1",
+      name: "Test Item",
+      roomId: "room-1",
+      room: { id: "room-1", name: "Living Room" },
+    };
+
+    const toRoom = { id: "room-2", name: "Bedroom" };
+
     const movedItem = {
       id: "item-123",
+      homeId: "home-1",
+      name: "Test Item",
       roomId: "room-2",
       updatedAt: new Date(),
     };
 
+    const mockActivity = {
+      id: "activity-1",
+      homeId: "home-1",
+      type: "other",
+      timestamp: expect.any(Date),
+      description: 'Moved "Test Item" from Living Room to Bedroom',
+      entityType: "item",
+      entityId: "item-123",
+      createdBy: "user-1",
+    };
+
     const mockDb = {
+      query: {
+        items: {
+          findFirst: vi.fn().mockResolvedValue(existingItem),
+        },
+        rooms: {
+          findFirst: vi.fn().mockResolvedValue(toRoom),
+        },
+      },
       update: vi.fn().mockReturnValue({
         set: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
@@ -366,12 +397,20 @@ describe("moveItem", () => {
           }),
         }),
       }),
+      insert: vi.fn().mockReturnValue({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([mockActivity]),
+        }),
+      }),
     };
     mockGetDb.mockResolvedValue(mockDb as any);
 
-    const result = await moveItem("item-123", "room-2");
+    const result = await moveItem("item-123", "room-2", "user-1");
 
     expect(result.roomId).toBe("room-2");
+    expect(mockDb.query.items.findFirst).toHaveBeenCalled();
+    expect(mockDb.query.rooms.findFirst).toHaveBeenCalled();
+    expect(mockDb.insert).toHaveBeenCalled();
   });
 });
 
