@@ -32,19 +32,36 @@ function isAuthRequest(request: Request): boolean {
   return pathname === "/api/auth" || pathname.startsWith("/api/auth/");
 }
 
-// Store env at module level for access in server functions
-let cloudflareEnv: { DOCUMENTS_BUCKET?: R2Bucket } | null = null;
+type CloudflareEnv = { DOCUMENTS_BUCKET?: R2Bucket } | undefined;
 
-export function getCloudflareEnv() {
-  return cloudflareEnv;
+/**
+ * Resolve the Cloudflare env bindings.
+ *
+ * IMPORTANT: Under Nitro's `cloudflare-module` preset, our custom server
+ * entry is *not* the literal Worker `fetch` export. Nitro wraps us with
+ * its own handler (see `nitro/dist/presets/cloudflare/runtime/_module-handler.mjs`),
+ * which then invokes our handler via `nitroApp.fetch(request)` — passing
+ * ONLY the request. The real Cloudflare `env` is stashed on
+ * `globalThis.__env__` and on `request.runtime.cloudflare.env`.
+ *
+ * So our previous `fetch(request, env)` signature received `env = undefined`,
+ * which is why `initStorageProvider` was never called and every server
+ * function blew up with "Storage provider not initialized".
+ */
+export function getCloudflareEnv(request?: Request): CloudflareEnv {
+  const fromGlobal = (globalThis as { __env__?: CloudflareEnv }).__env__;
+  if (fromGlobal) return fromGlobal;
+  const fromReq = (request as { runtime?: { cloudflare?: { env?: CloudflareEnv } } } | undefined)
+    ?.runtime?.cloudflare?.env;
+  return fromReq;
 }
 
-// Cloudflare Workers fetch handler signature: (request, env, ctx)
-async function fetch(request: Request, env: { DOCUMENTS_BUCKET?: R2Bucket }) {
-  // Store env for access in server functions
-  cloudflareEnv = env;
+async function fetch(request: Request) {
+  const env = getCloudflareEnv(request);
 
-  // Initialize storage provider if R2 bucket is available
+  // Initialize storage provider if R2 bucket is available.
+  // Safe to call on every request — `initStorageProvider` just swaps the
+  // singleton, and the R2 binding is stable for the lifetime of the isolate.
   if (env?.DOCUMENTS_BUCKET) {
     initStorageProvider(env.DOCUMENTS_BUCKET);
   }
