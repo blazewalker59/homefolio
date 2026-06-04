@@ -305,6 +305,42 @@ export const items = pgTable(
 );
 
 // ──────────────────────────────────────────────────────────────────────────────
+// Document
+//
+// Files uploaded by users and attached to entities (Home, Room, System, Item).
+// Uses polymorphic attachment via entityType and entityId. Files are stored in
+// R2 (or other providers) and referenced by storageKey. The storage provider
+// is abstracted behind a module interface for future swapping.
+// ──────────────────────────────────────────────────────────────────────────────
+
+export const documents = pgTable(
+  "documents",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    homeId: uuid("home_id")
+      .notNull()
+      .references(() => homes.id, { onDelete: "cascade" }),
+    entityType: text("entity_type").notNull(), // 'home' | 'room' | 'system' | 'item'
+    entityId: uuid("entity_id").notNull(),
+    type: text("type").notNull(), // 'receipt' | 'image' | 'manual' | 'warranty' | 'contract' | 'other'
+    filename: text("filename").notNull(),
+    mimeType: text("mime_type").notNull(),
+    size: integer("size").notNull(),
+    storageKey: text("storage_key").notNull().unique(),
+    notes: text("notes"),
+    uploadedBy: uuid("uploaded_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("documents_home_idx").on(t.homeId),
+    index("documents_entity_idx").on(t.entityType, t.entityId),
+  ],
+);
+
+// ──────────────────────────────────────────────────────────────────────────────
 // Relations
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -312,6 +348,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   sessions: many(sessions),
   accounts: many(accounts),
   home: one(homes, { fields: [users.id], references: [homes.userId] }),
+  documents: many(documents),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -328,6 +365,7 @@ export const homesRelations = relations(homes, ({ one, many }) => ({
   systems: many(systems),
   items: many(items),
   itemTemplates: many(itemTemplates),
+  documents: many(documents),
 }));
 
 export const roomsRelations = relations(rooms, ({ one, many }) => ({
@@ -355,4 +393,9 @@ export const itemsRelations = relations(items, ({ one }) => ({
   template: one(itemTemplates, { fields: [items.templateId], references: [itemTemplates.id] }),
   room: one(rooms, { fields: [items.roomId], references: [rooms.id] }),
   systemUnit: one(systemUnits, { fields: [items.systemUnitId], references: [systemUnits.id] }),
+}));
+
+export const documentsRelations = relations(documents, ({ one }) => ({
+  home: one(homes, { fields: [documents.homeId], references: [homes.id] }),
+  uploader: one(users, { fields: [documents.uploadedBy], references: [users.id] }),
 }));

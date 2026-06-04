@@ -5,6 +5,7 @@ import { listRoomsFn, createRoomFn, updateRoomFn, deleteRoomFn } from "@/server/
 import { seedTemplatesFn, listTemplatesFn, listItemsByRoomFn, createItemFn } from "@/server/item";
 import { ROOM_CATEGORIES, getRoomCategory } from "@/lib/room-categories";
 import { ItemFormModal } from "@/components/ItemFormModal";
+import { DropdownMenu } from "@/components/DropdownMenu";
 import { rooms, itemTemplates, items } from "@/db/schema";
 import type { InferSelectModel } from "drizzle-orm";
 
@@ -223,18 +224,28 @@ function RoomCard({
   const category = getRoomCategory(room.category);
 
   return (
-    <article className="island-shell feature-card rise-in rounded-2xl p-5">
+    <article className="island-shell feature-card rise-in relative rounded-2xl p-5">
       <div className="mb-3 flex items-start justify-between">
         <div>
           <h2 className="text-lg font-semibold text-[var(--sea-ink)]">{room.name}</h2>
           {category && <p className="text-xs text-[var(--sea-ink-soft)]">{category.label}</p>}
         </div>
-        <span
-          className="inline-flex rounded-full bg-[var(--lagoon-deep)]/10 px-2.5 py-0.5 text-xs font-medium text-[var(--lagoon-deep)]"
-          data-room-category={room.category}
-        >
-          {category?.label ?? room.category}
-        </span>
+        <div className="flex items-center gap-2">
+          <span
+            className="inline-flex rounded-full bg-[var(--lagoon-deep)]/10 px-2.5 py-0.5 text-xs font-medium text-[var(--lagoon-deep)]"
+            data-room-category={room.category}
+          >
+            {category?.label ?? room.category}
+          </span>
+          <DropdownMenu>
+            <DropdownMenu.Item onClick={onEdit} disabled={pending}>
+              Edit
+            </DropdownMenu.Item>
+            <DropdownMenu.Item onClick={onDelete} variant="danger" disabled={pending}>
+              Delete
+            </DropdownMenu.Item>
+          </DropdownMenu>
+        </div>
       </div>
 
       {room.items.length > 0 && (
@@ -263,23 +274,6 @@ function RoomCard({
       >
         + Add Item
       </button>
-
-      <div className="flex gap-2 pt-2">
-        <button
-          onClick={onEdit}
-          disabled={pending}
-          className="flex-1 rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-xs font-medium text-[var(--sea-ink)] transition hover:bg-gray-50 disabled:opacity-50"
-        >
-          Edit
-        </button>
-        <button
-          onClick={onDelete}
-          disabled={pending}
-          className="flex-1 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-50"
-        >
-          Delete
-        </button>
-      </div>
     </article>
   );
 }
