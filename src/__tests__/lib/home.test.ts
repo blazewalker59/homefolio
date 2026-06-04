@@ -1,12 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
-import { getOrCreateHome, getHome, updateHome } from "@/lib/home";
+import { getOrCreateHome, getHome, updateHome, calculateTotalInvested } from "@/lib/home";
 
 // Mock the db client module.
 vi.mock("@/db/client", () => ({
   getDb: vi.fn(),
 }));
 
+// Mock the document module.
+vi.mock("@/lib/document", () => ({
+  calculateReceiptTotal: vi.fn(),
+}));
+
 import { getDb } from "@/db/client";
+import { calculateReceiptTotal } from "@/lib/document";
 
 const mockGetDb = vi.mocked(getDb);
 
@@ -242,5 +248,44 @@ describe("updateHome", () => {
     // The module function accepts partial updates, so address validation
     // happens at the server function layer via zod schema.
     expect(true).toBe(true);
+  });
+});
+
+describe("calculateTotalInvested", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns purchase price + receipt total", async () => {
+    vi.mocked(calculateReceiptTotal).mockResolvedValue(500);
+
+    const total = await calculateTotalInvested("home-1", "250000");
+
+    expect(total).toBe(250500);
+    expect(calculateReceiptTotal).toHaveBeenCalledWith("home-1");
+  });
+
+  it("returns receipt total when no purchase price", async () => {
+    vi.mocked(calculateReceiptTotal).mockResolvedValue(750.5);
+
+    const total = await calculateTotalInvested("home-1", null);
+
+    expect(total).toBe(750.5);
+  });
+
+  it("returns 0 when no purchase price and no receipts", async () => {
+    vi.mocked(calculateReceiptTotal).mockResolvedValue(0);
+
+    const total = await calculateTotalInvested("home-1", null);
+
+    expect(total).toBe(0);
+  });
+
+  it("handles decimal purchase prices", async () => {
+    vi.mocked(calculateReceiptTotal).mockResolvedValue(100.25);
+
+    const total = await calculateTotalInvested("home-1", "350000.75");
+
+    expect(total).toBe(350101);
   });
 });

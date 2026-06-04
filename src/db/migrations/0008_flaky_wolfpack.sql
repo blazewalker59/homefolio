@@ -1,0 +1,1 @@
+ALTER TABLE "documents" ADD COLUMN "amount" numeric(10, 2);

@@ -196,3 +196,42 @@ export async function logItemMoved(params: {
     createdBy: params.createdBy,
   });
 }
+
+/**
+ * Log a receipt upload event as a purchase activity.
+ *
+ * Called automatically when a receipt is uploaded.
+ */
+export async function logReceiptUploaded(params: {
+  homeId: string;
+  documentId: string;
+  filename: string;
+  amount?: string | null;
+  entityType?: string | null;
+  entityId?: string | null;
+  createdBy: string;
+}) {
+  const amountStr = params.amount ? ` ($${parseFloat(params.amount).toFixed(2)})` : "";
+  const description = `Receipt uploaded: "${params.filename}"${amountStr}`;
+
+  // Map document entity type to activity entity type
+  let activityEntityType: EntityType | undefined;
+  if (
+    params.entityType === "room" ||
+    params.entityType === "system" ||
+    params.entityType === "item"
+  ) {
+    activityEntityType = params.entityType;
+  }
+
+  return createActivity({
+    homeId: params.homeId,
+    type: "purchase",
+    timestamp: new Date(),
+    description,
+    entityType: activityEntityType,
+    entityId: params.entityId ?? undefined,
+    notes: `Document ID: ${params.documentId}`,
+    createdBy: params.createdBy,
+  });
+}

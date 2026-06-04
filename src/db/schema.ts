@@ -328,6 +328,7 @@ export const documents = pgTable(
     size: integer("size").notNull(),
     storageKey: text("storage_key").notNull().unique(),
     notes: text("notes"),
+    amount: numeric("amount", { precision: 10, scale: 2 }), // Only used for receipts
     uploadedBy: uuid("uploaded_by")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),

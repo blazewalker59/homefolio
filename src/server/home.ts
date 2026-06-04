@@ -12,7 +12,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { getHome, updateHome } from "@/lib/home";
+import { getHome, updateHome, calculateTotalInvested } from "@/lib/home";
 import { requireSessionUser } from "@/lib/auth/session";
 
 /**
@@ -56,3 +56,15 @@ export const updateHomeFn = createServerFn({ method: "POST" })
 
     return updateHome(home.id, updates);
   });
+
+/**
+ * Get the total amount invested in the home.
+ *
+ * Total Invested = purchase price + sum of all receipt amounts.
+ */
+export const getTotalInvestedFn = createServerFn({ method: "GET" }).handler(async () => {
+  const user = await requireSessionUser();
+  const home = await getHome(user.id);
+  if (!home) return 0;
+  return calculateTotalInvested(home.id, home.purchasePrice);
+});

@@ -1,5 +1,6 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { getHomeFn } from "@/server/home";
+import { getTotalInvestedFn } from "@/server/home";
 
 export const Route = createFileRoute("/")({
   loader: async () => {
@@ -8,7 +9,8 @@ export const Route = createFileRoute("/")({
       if (!home?.address) {
         throw redirect({ to: "/setup" });
       }
-      return { home };
+      const totalInvested = await getTotalInvestedFn();
+      return { home, totalInvested };
     } catch (err) {
       // If not authenticated, redirect to sign-in.
       if (err instanceof Error && err.message === "Not authenticated") {
@@ -61,7 +63,7 @@ const SECTIONS: Section[] = [
 ];
 
 function Dashboard() {
-  const { home } = Route.useLoaderData();
+  const { home, totalInvested } = Route.useLoaderData();
   const stats: Array<{ kicker: string; value: string }> = [];
 
   if (home.yearBuilt) {
@@ -74,6 +76,12 @@ function Dashboard() {
     stats.push({
       kicker: "Layout",
       value: `${home.bedCount ?? 0} bed · ${home.bathCount ?? 0} bath`,
+    });
+  }
+  if (totalInvested > 0) {
+    stats.push({
+      kicker: "Total Invested",
+      value: `$${totalInvested.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
     });
   }
 

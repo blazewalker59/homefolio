@@ -9,6 +9,7 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { homes } from "@/db/schema";
+import { calculateReceiptTotal } from "@/lib/document";
 
 /**
  * Fetch the home for a user, or create one if it doesn't exist.
@@ -75,4 +76,18 @@ export async function updateHome(
     .where(eq(homes.id, homeId))
     .returning();
   return updated;
+}
+
+/**
+ * Calculate the total amount invested in the home.
+ *
+ * Total Invested = purchase price + sum of all receipt amounts.
+ */
+export async function calculateTotalInvested(
+  homeId: string,
+  purchasePrice?: string | null,
+): Promise<number> {
+  const receiptTotal = await calculateReceiptTotal(homeId);
+  const purchaseAmount = purchasePrice ? parseFloat(purchasePrice) : 0;
+  return purchaseAmount + receiptTotal;
 }

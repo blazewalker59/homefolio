@@ -21,6 +21,7 @@ export function DocumentUpload({ entityType, entityId, onUploadComplete }: Docum
   const [file, setFile] = useState<File | null>(null);
   const [type, setType] = useState<DocumentType>("other");
   const [notes, setNotes] = useState("");
+  const [amount, setAmount] = useState("");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,11 +47,13 @@ export function DocumentUpload({ entityType, entityId, onUploadComplete }: Docum
           mimeType: file.type,
           fileContent: base64,
           notes: notes || undefined,
+          amount: type === "receipt" && amount ? amount : undefined,
         },
       });
 
       setFile(null);
       setNotes("");
+      setAmount("");
       onUploadComplete?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
@@ -86,6 +89,21 @@ export function DocumentUpload({ entityType, entityId, onUploadComplete }: Docum
           className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm"
         />
       </div>
+
+      {type === "receipt" && (
+        <div>
+          <label className="mb-2 block text-sm font-medium text-[var(--sea-ink)]">Amount ($)</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="0.00"
+            className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2.5 text-sm"
+          />
+        </div>
+      )}
 
       <div>
         <label className="mb-2 block text-sm font-medium text-[var(--sea-ink)]">
