@@ -82,6 +82,17 @@ function ItemsPage() {
   const [movingItem, setMovingItem] = useState<Item | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string>("");
+
+  // Get unique categories from items
+  const categories = Array.from(
+    new Set(items.map((item) => item.template?.category).filter(Boolean)),
+  ).sort() as string[];
+
+  // Filter items by category
+  const filteredItems = categoryFilter
+    ? items.filter((item) => item.template?.category === categoryFilter)
+    : items;
 
   async function handleCreate(data: {
     templateId: string;
@@ -204,15 +215,51 @@ function ItemsPage() {
         </div>
       )}
 
-      {items.length === 0 ? (
+      {categories.length > 0 && (
+        <section className="mt-8">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-medium text-[var(--sea-ink-soft)]">Filter by type:</span>
+            <button
+              onClick={() => setCategoryFilter("")}
+              className={`rounded-sm px-3 py-1.5 text-xs font-medium transition ${
+                categoryFilter === ""
+                  ? "bg-[var(--lagoon-deep)] text-[var(--on-accent)]"
+                  : "border border-[var(--line)] bg-[var(--surface-strong)] text-[var(--sea-ink)] hover:border-[var(--lagoon-deep)]"
+              }`}
+            >
+              All ({items.length})
+            </button>
+            {categories.map((category) => {
+              const count = items.filter((item) => item.template?.category === category).length;
+              return (
+                <button
+                  key={category}
+                  onClick={() => setCategoryFilter(category)}
+                  className={`rounded-sm px-3 py-1.5 text-xs font-medium transition ${
+                    categoryFilter === category
+                      ? "bg-[var(--lagoon-deep)] text-[var(--on-accent)]"
+                      : "border border-[var(--line)] bg-[var(--surface-strong)] text-[var(--sea-ink)] hover:border-[var(--lagoon-deep)]"
+                  }`}
+                >
+                  {category} ({count})
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {filteredItems.length === 0 ? (
         <section className="island-shell mt-8 rounded-2xl p-8 text-center">
           <p className="text-sm text-[var(--sea-ink-soft)]">
-            No items yet. Add your first item from a template to start cataloging your home.
+            {categoryFilter
+              ? `No items found with type "${categoryFilter}".`
+              : "No items yet. Add your first item from a template to start cataloging your home."}
           </p>
         </section>
       ) : (
         <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((item) => (
+          {filteredItems.map((item) => (
             <ItemCard
               key={item.id}
               item={item}
