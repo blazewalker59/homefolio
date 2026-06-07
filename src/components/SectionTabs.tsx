@@ -69,20 +69,35 @@ export default function SectionTabs() {
             <Link
               key={to}
               to={to}
-              className="flex flex-1 flex-col items-center gap-1 py-2 no-underline transition"
+              className="relative flex flex-1 flex-col items-center gap-1 py-2 no-underline transition"
             >
               {({ isActive }: { isActive: boolean }) => (
                 <>
-                  <Icon
-                    className={`h-5 w-5 transition ${
-                      isActive ? "text-[var(--lagoon-deep)]" : "text-[var(--sea-ink-soft)]"
+                  {/* Top accent bar — clear active indicator on the bottom bar. */}
+                  <span
+                    className={`absolute inset-x-4 top-0 h-0.5 rounded-full transition ${
+                      isActive ? "bg-[var(--lagoon-deep)]" : "bg-transparent"
                     }`}
-                    strokeWidth={1.75}
                     aria-hidden="true"
                   />
                   <span
-                    className={`text-[0.62rem] font-medium leading-none transition ${
-                      isActive ? "text-[var(--lagoon-deep)]" : "text-[var(--sea-ink-soft)]"
+                    className={`grid place-items-center rounded-full p-1.5 transition ${
+                      isActive ? "bg-[var(--lagoon-deep)]/10" : "bg-transparent"
+                    }`}
+                  >
+                    <Icon
+                      className={`h-5 w-5 transition ${
+                        isActive ? "text-[var(--lagoon-deep)]" : "text-[var(--sea-ink-soft)]"
+                      }`}
+                      strokeWidth={isActive ? 2 : 1.75}
+                      aria-hidden="true"
+                    />
+                  </span>
+                  <span
+                    className={`text-[0.62rem] leading-none transition ${
+                      isActive
+                        ? "font-semibold text-[var(--lagoon-deep)]"
+                        : "font-medium text-[var(--sea-ink-soft)]"
                     }`}
                   >
                     {label}
