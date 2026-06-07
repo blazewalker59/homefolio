@@ -20,8 +20,7 @@
 import { createStartHandler, defaultStreamHandler } from "@tanstack/react-start/server";
 import type { R2Bucket } from "@cloudflare/workers-types";
 import { getAuth } from "@/lib/auth/server";
-import { initStorageProvider, setStorageProvider } from "@/lib/storage";
-import { MemoryStorageProvider } from "@/lib/storage/memory";
+import { initStorageProvider } from "@/lib/storage";
 import { downloadByStorageKey } from "@/lib/document";
 
 const startFetch = createStartHandler(defaultStreamHandler);
@@ -65,14 +64,6 @@ async function serveDocument(request: Request): Promise<Response> {
   });
 }
 
-// Local-dev fallback: no R2 binding, so install an in-memory provider once.
-let devStorageInstalled = false;
-function ensureDevStorage(): void {
-  if (devStorageInstalled) return;
-  setStorageProvider(new MemoryStorageProvider());
-  devStorageInstalled = true;
-}
-
 type CloudflareEnv = { DOCUMENTS_BUCKET?: R2Bucket } | undefined;
 
 /**
@@ -100,13 +91,11 @@ export function getCloudflareEnv(request?: Request): CloudflareEnv {
 async function fetch(request: Request) {
   const env = getCloudflareEnv(request);
 
-  // Initialize storage provider. In production the R2 binding is available;
-  // in local dev there's none, so fall back to an in-memory provider so
-  // uploads/views work this session instead of throwing "not initialized".
+  // Initialize the R2-backed storage provider in production. In local dev
+  // there's no binding; storage-using code paths call ensureStorageProvider(),
+  // which installs the filesystem provider on demand.
   if (env?.DOCUMENTS_BUCKET) {
     initStorageProvider(env.DOCUMENTS_BUCKET);
-  } else {
-    ensureDevStorage();
   }
 
   if (isAuthRequest(request)) {

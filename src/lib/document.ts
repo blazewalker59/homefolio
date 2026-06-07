@@ -10,7 +10,7 @@ import { eq, and } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { documents, homes } from "@/db/schema";
 import type { DocumentType, DocumentEntityType } from "@/lib/storage/types";
-import { getStorageProvider, generateStorageKey } from "@/lib/storage";
+import { ensureStorageProvider, generateStorageKey } from "@/lib/storage";
 import { logReceiptUploaded } from "@/lib/activity";
 
 export interface CreateDocumentParams {
@@ -35,7 +35,7 @@ export interface CreateDocumentParams {
  */
 export async function createDocument(params: CreateDocumentParams) {
   const db = await getDb();
-  const storage = getStorageProvider();
+  const storage = await ensureStorageProvider();
 
   const storageKey = generateStorageKey(
     params.homeId,
@@ -122,7 +122,7 @@ export async function getDocumentUrl(documentId: string): Promise<string> {
     throw new Error("Document not found");
   }
 
-  const storage = getStorageProvider();
+  const storage = await ensureStorageProvider();
   return storage.getSignedUrl(doc.storageKey);
 }
 
@@ -137,7 +137,7 @@ export async function downloadDocument(documentId: string): Promise<{
   const doc = await getDocument(documentId);
   if (!doc) return null;
 
-  const storage = getStorageProvider();
+  const storage = await ensureStorageProvider();
   const content = await storage.download(doc.storageKey);
   if (!content) return null;
 
@@ -170,7 +170,7 @@ export async function downloadByStorageKey(storageKey: string): Promise<{
       where: eq(homes.photoStorageKey, storageKey),
     });
     if (!home) return null;
-    const storage = getStorageProvider();
+    const storage = await ensureStorageProvider();
     const content = await storage.download(storageKey);
     if (!content) return null;
     return {
@@ -180,7 +180,7 @@ export async function downloadByStorageKey(storageKey: string): Promise<{
     };
   }
 
-  const storage = getStorageProvider();
+  const storage = await ensureStorageProvider();
   const content = await storage.download(storageKey);
   if (!content) return null;
 
@@ -220,7 +220,7 @@ export async function deleteDocument(documentId: string): Promise<void> {
     throw new Error("Document not found");
   }
 
-  const storage = getStorageProvider();
+  const storage = await ensureStorageProvider();
   await storage.delete(doc.storageKey);
 
   await db.delete(documents).where(eq(documents.id, documentId));

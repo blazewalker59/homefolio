@@ -13,7 +13,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getHome, updateHome, calculateTotalInvested } from "@/lib/home";
-import { getStorageProvider, generateStorageKey } from "@/lib/storage";
+import { ensureStorageProvider, generateStorageKey } from "@/lib/storage";
 import { requireSessionUser } from "@/lib/auth/session";
 
 /**
@@ -103,7 +103,7 @@ export const uploadHomePhotoFn = createServerFn({ method: "POST" })
     if (!home) throw new Error("No home found for this user");
 
     const bytes = Uint8Array.from(atob(data.fileContent), (c) => c.charCodeAt(0));
-    const storage = getStorageProvider();
+    const storage = await ensureStorageProvider();
     const key = generateStorageKey(home.id, "home-photo", home.id, data.filename);
     await storage.upload(key, bytes, data.mimeType);
 
@@ -128,7 +128,7 @@ export const removeHomePhotoFn = createServerFn({ method: "POST" }).handler(asyn
   if (!home) throw new Error("No home found for this user");
 
   if (home.photoStorageKey) {
-    const storage = getStorageProvider();
+    const storage = await ensureStorageProvider();
     try {
       await storage.delete(home.photoStorageKey);
     } catch {

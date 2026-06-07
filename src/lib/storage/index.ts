@@ -8,7 +8,6 @@
 import type { R2Bucket } from "@cloudflare/workers-types";
 import type { StorageProvider } from "./types";
 import { R2StorageProvider } from "./r2";
-import { MemoryStorageProvider } from "./memory";
 
 // Keep the provider on globalThis rather than a module-local `let`. Under
 // Vite's dev SSR, this module can be instantiated more than once (e.g. the
@@ -49,22 +48,38 @@ export function setStorageProvider(provider: StorageProvider): void {
 }
 
 /**
- * Get the configured storage provider.
+ * Get the configured storage provider synchronously.
  *
- * In local development, lazily falls back to the in-memory provider if nothing
- * has been installed yet (no R2 binding exists there). In production this
- * throws if storage was never initialized, surfacing a real misconfiguration.
+ * @throws if storage hasn't been initialized. Prefer `ensureStorageProvider()`
+ * in async code paths so local dev can install its filesystem provider.
  */
 export function getStorageProvider(): StorageProvider {
   const g = globalThis as StorageGlobal;
   if (!g[STORAGE_KEY]) {
-    if (isDev()) {
-      g[STORAGE_KEY] = new MemoryStorageProvider();
-    } else {
-      throw new Error("Storage provider not initialized. Call initStorageProvider() first.");
-    }
+    throw new Error("Storage provider not initialized. Call initStorageProvider() first.");
   }
   return g[STORAGE_KEY]!;
+}
+
+/**
+ * Resolve the storage provider, installing the local filesystem provider in
+ * development if none is set (no R2 binding exists there). In production this
+ * throws if storage was never initialized, surfacing a real misconfiguration.
+ *
+ * The filesystem provider is imported lazily behind the dev guard so it (and
+ * `node:fs`) is dead-code-eliminated from the production/Cloudflare bundle.
+ */
+export async function ensureStorageProvider(): Promise<StorageProvider> {
+  const g = globalThis as StorageGlobal;
+  if (g[STORAGE_KEY]) return g[STORAGE_KEY]!;
+
+  if (isDev()) {
+    const { LocalFsStorageProvider } = await import("./local-fs");
+    g[STORAGE_KEY] ??= new LocalFsStorageProvider();
+    return g[STORAGE_KEY]!;
+  }
+
+  throw new Error("Storage provider not initialized. Call initStorageProvider() first.");
 }
 
 /**
