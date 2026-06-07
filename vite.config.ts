@@ -63,6 +63,11 @@ const config = defineConfig({
   lint: { ignorePatterns: generatedFiles },
   resolve: { tsconfigPaths: true },
   plugins: appPlugins,
+  // `heic2any` is only ever loaded via a lazy `import()` (HEIC photo upload).
+  // Pre-bundle it up front so Vite doesn't discover it mid-session and force
+  // a dep re-optimization + reload, which races React/router context to null
+  // ("Cannot read properties of null (reading 'useContext')" in HeadContent).
+  optimizeDeps: { include: ["heic2any"] },
   build: {
     rollupOptions: {
       external: ["cloudflare:workers"],
