@@ -149,6 +149,30 @@ export async function downloadDocument(documentId: string): Promise<{
 }
 
 /**
+ * Download a document's content by its storage key.
+ *
+ * Used by the `/api/documents/:key` serving route — `getSignedUrl` points at
+ * that route, so this resolves the key back to bytes + content metadata.
+ */
+export async function downloadByStorageKey(storageKey: string): Promise<{
+  content: ArrayBuffer;
+  filename: string;
+  mimeType: string;
+} | null> {
+  const db = await getDb();
+  const doc = await db.query.documents.findFirst({
+    where: eq(documents.storageKey, storageKey),
+  });
+  if (!doc) return null;
+
+  const storage = getStorageProvider();
+  const content = await storage.download(storageKey);
+  if (!content) return null;
+
+  return { content, filename: doc.filename, mimeType: doc.mimeType };
+}
+
+/**
  * Update a document's metadata (type, entity, notes, amount).
  */
 export async function updateDocument(

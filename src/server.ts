@@ -20,7 +20,9 @@
 import { createStartHandler, defaultStreamHandler } from "@tanstack/react-start/server";
 import type { R2Bucket } from "@cloudflare/workers-types";
 import { getAuth } from "@/lib/auth/server";
-import { initStorageProvider } from "@/lib/storage";
+import { initStorageProvider, setStorageProvider } from "@/lib/storage";
+import { MemoryStorageProvider } from "@/lib/storage/memory";
+import { downloadByStorageKey } from "@/lib/document";
 
 const startFetch = createStartHandler(defaultStreamHandler);
 
@@ -30,6 +32,45 @@ const startFetch = createStartHandler(defaultStreamHandler);
 function isAuthRequest(request: Request): boolean {
   const { pathname } = new URL(request.url);
   return pathname === "/api/auth" || pathname.startsWith("/api/auth/");
+}
+
+const DOCUMENTS_PREFIX = "/api/documents/";
+
+function isDocumentRequest(request: Request): boolean {
+  return new URL(request.url).pathname.startsWith(DOCUMENTS_PREFIX);
+}
+
+/**
+ * Serve a stored document. `getSignedUrl` returns `/api/documents/{key}`, so
+ * this resolves that key back to bytes and streams them with the right
+ * content type. Works for both R2 (production) and the in-memory dev provider.
+ *
+ * NOTE: this matches the existing placeholder URL scheme, which is not signed
+ * — anyone with the exact storage key (only handed out to authenticated users
+ * via getDocumentUrlFn) can fetch it. Replace with real presigned URLs before
+ * treating documents as private.
+ */
+async function serveDocument(request: Request): Promise<Response> {
+  const { pathname } = new URL(request.url);
+  const key = decodeURIComponent(pathname.slice(DOCUMENTS_PREFIX.length));
+  const doc = await downloadByStorageKey(key);
+  if (!doc) return new Response("Document not found", { status: 404 });
+
+  return new Response(doc.content, {
+    headers: {
+      "Content-Type": doc.mimeType,
+      "Content-Disposition": `inline; filename="${doc.filename.replace(/["\\\r\n]/g, "")}"`,
+      "Cache-Control": "private, max-age=60",
+    },
+  });
+}
+
+// Local-dev fallback: no R2 binding, so install an in-memory provider once.
+let devStorageInstalled = false;
+function ensureDevStorage(): void {
+  if (devStorageInstalled) return;
+  setStorageProvider(new MemoryStorageProvider());
+  devStorageInstalled = true;
 }
 
 type CloudflareEnv = { DOCUMENTS_BUCKET?: R2Bucket } | undefined;
@@ -59,16 +100,21 @@ export function getCloudflareEnv(request?: Request): CloudflareEnv {
 async function fetch(request: Request) {
   const env = getCloudflareEnv(request);
 
-  // Initialize storage provider if R2 bucket is available.
-  // Safe to call on every request — `initStorageProvider` just swaps the
-  // singleton, and the R2 binding is stable for the lifetime of the isolate.
+  // Initialize storage provider. In production the R2 binding is available;
+  // in local dev there's none, so fall back to an in-memory provider so
+  // uploads/views work this session instead of throwing "not initialized".
   if (env?.DOCUMENTS_BUCKET) {
     initStorageProvider(env.DOCUMENTS_BUCKET);
+  } else {
+    ensureDevStorage();
   }
 
   if (isAuthRequest(request)) {
     const auth = await getAuth();
     return auth.handler(request);
+  }
+  if (isDocumentRequest(request)) {
+    return serveDocument(request);
   }
   return startFetch(request);
 }

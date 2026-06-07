@@ -22,6 +22,15 @@ export function initStorageProvider(bucket: R2Bucket): void {
 }
 
 /**
+ * Set the storage provider directly. Used in local development to install a
+ * non-R2 provider (e.g. the in-memory dev provider) when no bucket binding
+ * is available.
+ */
+export function setStorageProvider(provider: StorageProvider): void {
+  storageProvider = provider;
+}
+
+/**
  * Get the configured storage provider.
  *
  * @throws Error if the storage provider hasn't been initialized
