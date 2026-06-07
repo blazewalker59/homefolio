@@ -26,6 +26,7 @@
     "prepare": "vp config"
   },
   "dependencies": {
+    "@base-ui-components/react": "1.0.0-rc.0",
     "@neondatabase/serverless": "^1.1.0",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "latest",
