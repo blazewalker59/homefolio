@@ -1,6 +1,6 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { getHomeFn } from "@/server/home";
-import { getTotalInvestedFn } from "@/server/home";
+import { useState } from "react";
+import { getHomeFn, updateHomeFn, getTotalInvestedFn } from "@/server/home";
 
 export const Route = createFileRoute("/")({
   loader: async () => {
@@ -64,6 +64,10 @@ const SECTIONS: Section[] = [
 
 function Dashboard() {
   const { home, totalInvested } = Route.useLoaderData();
+  const [isEditing, setIsEditing] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const stats: Array<{ kicker: string; value: string }> = [];
 
   if (home.yearBuilt) {
@@ -85,40 +89,219 @@ function Dashboard() {
     });
   }
 
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setPending(true);
+    setError(null);
+
+    const formData = new FormData(e.currentTarget);
+    const address = formData.get("address") as string;
+    const name = formData.get("name") as string;
+    const yearBuilt = formData.get("yearBuilt") as string;
+    const sqft = formData.get("sqft") as string;
+    const bedCount = formData.get("bedCount") as string;
+    const bathCount = formData.get("bathCount") as string;
+
+    if (!address.trim()) {
+      setError("Address is required");
+      setPending(false);
+      return;
+    }
+
+    try {
+      await updateHomeFn({
+        data: {
+          address: address.trim(),
+          name: name.trim() || null,
+          yearBuilt: yearBuilt ? parseInt(yearBuilt, 10) : null,
+          sqft: sqft ? parseInt(sqft, 10) : null,
+          bedCount: bedCount ? parseInt(bedCount, 10) : null,
+          bathCount: bathCount ? parseInt(bathCount, 10) : null,
+        },
+      });
+      setIsEditing(false);
+      window.location.reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save");
+      setPending(false);
+    }
+  }
+
   return (
     <main className="page-wrap px-4 pb-12 pt-12 sm:pt-16">
-      {/* Magazine cover ------------------------------------------------ */}
-      <section className="rise-in border-b border-[var(--line)] pb-10 sm:pb-14">
-        <div className="mb-6 flex items-center justify-between text-[0.66rem] font-semibold uppercase tracking-[0.22em] text-[var(--sea-ink-soft)]">
-          <span>The Residence</span>
-          <span className="font-mono text-[var(--lagoon-deep)]">No. 001</span>
+      {/* Home info section - condensed and editable */}
+      <section className="rise-in mb-8 border-b border-[var(--line)] pb-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <div className="mb-2 flex items-center gap-3 text-[0.66rem] font-semibold uppercase tracking-[0.22em] text-[var(--sea-ink-soft)]">
+              <span>The Residence</span>
+              <span className="font-mono text-[var(--lagoon-deep)]">No. 001</span>
+            </div>
+
+            {!isEditing ? (
+              <>
+                <h1 className="mb-2 text-3xl font-bold text-[var(--sea-ink)] sm:text-4xl">
+                  {home.name || "My Home"}
+                </h1>
+                <p className="mb-4 text-sm text-[var(--sea-ink-soft)]">{home.address}</p>
+
+                {stats.length > 0 && (
+                  <div className="flex flex-wrap gap-4 text-sm">
+                    {stats.map((s) => (
+                      <div key={s.kicker} className="flex items-baseline gap-2">
+                        <span className="font-semibold text-[var(--sea-ink)]">{s.value}</span>
+                        <span className="text-xs text-[var(--sea-ink-soft)]">{s.kicker}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <form onSubmit={handleSubmit} className="mt-4 space-y-3">
+                <div>
+                  <label
+                    htmlFor="address"
+                    className="mb-1 block text-xs font-medium text-[var(--sea-ink)]"
+                  >
+                    Address <span className="text-[var(--danger-fg)]">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="address"
+                    name="address"
+                    defaultValue={home.address || ""}
+                    required
+                    className="w-full rounded-sm border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-1.5 text-sm text-[var(--sea-ink)] focus:border-[var(--lagoon-deep)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="name"
+                    className="mb-1 block text-xs font-medium text-[var(--sea-ink)]"
+                  >
+                    Home name
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    defaultValue={home.name || ""}
+                    className="w-full rounded-sm border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-1.5 text-sm text-[var(--sea-ink)] focus:border-[var(--lagoon-deep)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <div>
+                    <label
+                      htmlFor="yearBuilt"
+                      className="mb-1 block text-xs font-medium text-[var(--sea-ink)]"
+                    >
+                      Year built
+                    </label>
+                    <input
+                      type="number"
+                      id="yearBuilt"
+                      name="yearBuilt"
+                      defaultValue={home.yearBuilt || ""}
+                      min="1800"
+                      max="2100"
+                      className="w-full rounded-sm border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-1.5 text-sm text-[var(--sea-ink)] focus:border-[var(--lagoon-deep)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="sqft"
+                      className="mb-1 block text-xs font-medium text-[var(--sea-ink)]"
+                    >
+                      Sq ft
+                    </label>
+                    <input
+                      type="number"
+                      id="sqft"
+                      name="sqft"
+                      defaultValue={home.sqft || ""}
+                      min="0"
+                      className="w-full rounded-sm border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-1.5 text-sm text-[var(--sea-ink)] focus:border-[var(--lagoon-deep)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="bedCount"
+                      className="mb-1 block text-xs font-medium text-[var(--sea-ink)]"
+                    >
+                      Beds
+                    </label>
+                    <input
+                      type="number"
+                      id="bedCount"
+                      name="bedCount"
+                      defaultValue={home.bedCount || ""}
+                      min="0"
+                      className="w-full rounded-sm border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-1.5 text-sm text-[var(--sea-ink)] focus:border-[var(--lagoon-deep)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="bathCount"
+                      className="mb-1 block text-xs font-medium text-[var(--sea-ink)]"
+                    >
+                      Baths
+                    </label>
+                    <input
+                      type="number"
+                      id="bathCount"
+                      name="bathCount"
+                      defaultValue={home.bathCount || ""}
+                      min="0"
+                      step="0.5"
+                      className="w-full rounded-sm border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-1.5 text-sm text-[var(--sea-ink)] focus:border-[var(--lagoon-deep)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
+                    />
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="rounded-sm border border-[var(--danger-border)] bg-[var(--danger-bg)] px-3 py-2 text-xs text-[var(--danger-fg)]">
+                    {error}
+                  </div>
+                )}
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    type="submit"
+                    disabled={pending}
+                    className="rounded-sm bg-[var(--lagoon-deep)] px-4 py-1.5 text-xs font-semibold text-[var(--on-accent)] transition hover:opacity-90 disabled:opacity-50"
+                  >
+                    {pending ? "Saving…" : "Save"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setError(null);
+                    }}
+                    disabled={pending}
+                    className="rounded-sm border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-1.5 text-xs font-semibold text-[var(--sea-ink)] transition hover:bg-[var(--link-bg-hover)]"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+
+          {!isEditing && (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="shrink-0 rounded-sm border border-[var(--line)] bg-[var(--surface-strong)] px-3 py-1.5 text-xs font-medium text-[var(--sea-ink)] transition hover:border-[var(--lagoon-deep)] hover:text-[var(--lagoon-deep)]"
+            >
+              Edit
+            </button>
+          )}
         </div>
-
-        <p className="island-kicker mb-4">A property record</p>
-
-        <h1 className="display-title mb-6 max-w-4xl text-5xl text-[var(--sea-ink)] sm:text-7xl">
-          {home.name || "My Home"}
-          <span className="ml-1 text-[var(--lagoon-deep)]">.</span>
-        </h1>
-
-        <p className="max-w-2xl font-serif text-lg italic text-[var(--sea-ink-soft)] sm:text-xl">
-          {home.address}
-        </p>
-
-        {stats.length > 0 && (
-          <dl className="mt-10 grid gap-y-6 border-t border-[var(--line)] pt-6 sm:grid-cols-3 sm:gap-x-10">
-            {stats.map((s) => (
-              <div key={s.kicker} className="flex flex-col gap-1">
-                <dt className="text-[0.66rem] font-semibold uppercase tracking-[0.22em] text-[var(--sea-ink-soft)]">
-                  {s.kicker}
-                </dt>
-                <dd className="m-0 font-serif text-3xl font-bold text-[var(--sea-ink)]">
-                  {s.value}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        )}
       </section>
 
       {/* Table of contents -------------------------------------------- */}
