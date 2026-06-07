@@ -31,7 +31,7 @@ const DOCUMENT_TYPE_OPTIONS: DocumentType[] = [
   "other",
 ];
 
-export const Route = createFileRoute("/documents")({
+export const Route = createFileRoute("/_app/documents")({
   loader: async () => {
     try {
       const home = await getHomeFn();
@@ -158,27 +158,21 @@ function DocumentsPage() {
   }
 
   return (
-    <main className="page-wrap px-4 pb-8 pt-14">
-      <section className="rise-in border-b border-[var(--line)] pb-10 sm:pb-12">
-        <div className="mb-6 flex items-center justify-between text-[0.66rem] font-semibold uppercase tracking-[0.22em] text-[var(--sea-ink-soft)]">
-          <span>{home.name || "My Home"}</span>
-          <span className="font-mono text-[var(--lagoon-deep)]">No. 004</span>
+    <main className="page-wrap px-4 pb-8 pt-6">
+      <header className="rise-in mb-6 flex flex-wrap items-end justify-between gap-3 border-b border-[var(--line)] pb-4">
+        <div>
+          <p className="island-kicker mb-1">The paper trail</p>
+          <h1 className="font-serif text-2xl font-bold text-[var(--sea-ink)] sm:text-3xl">
+            Documents
+          </h1>
         </div>
-        <p className="island-kicker mb-4">The paper trail</p>
-        <h1 className="display-title mb-5 max-w-3xl text-5xl text-[var(--sea-ink)] sm:text-7xl">
-          Documents<span className="text-[var(--lagoon-deep)]">.</span>
-        </h1>
-        <p className="mb-8 max-w-2xl font-serif text-lg italic text-[var(--sea-ink-soft)] sm:text-xl">
-          Receipts, manuals, warranties — properly filed.
-        </p>
-
         <button
           onClick={() => setShowUpload(true)}
-          className="rounded-sm bg-[var(--lagoon-deep)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--on-accent)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          className="rounded-sm bg-[var(--lagoon-deep)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--on-accent)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
         >
           Upload Document
         </button>
-      </section>
+      </header>
 
       {showUpload && (
         <section className="island-shell mt-8 rounded-2xl p-6">

@@ -37,7 +37,7 @@ interface SystemWithUnits extends System {
   units: SystemUnitWithItems[];
 }
 
-export const Route = createFileRoute("/systems")({
+export const Route = createFileRoute("/_app/systems")({
   loader: async () => {
     try {
       const home = await getHomeFn();
@@ -74,7 +74,7 @@ export const Route = createFileRoute("/systems")({
 });
 
 function SystemsPage() {
-  const { home, systems: initialSystems, templates } = Route.useLoaderData();
+  const { systems: initialSystems, templates } = Route.useLoaderData();
   const [systems, setSystems] = useState(initialSystems);
   const [showCreate, setShowCreate] = useState(false);
   const [editingSystem, setEditingSystem] = useState<System | null>(null);
@@ -205,27 +205,21 @@ function SystemsPage() {
   const addItemUnit = systems.flatMap((s) => s.units).find((u) => u.id === addItemUnitId);
 
   return (
-    <main className="page-wrap px-4 pb-8 pt-14">
-      <section className="rise-in border-b border-[var(--line)] pb-10 sm:pb-12">
-        <div className="mb-6 flex items-center justify-between text-[0.66rem] font-semibold uppercase tracking-[0.22em] text-[var(--sea-ink-soft)]">
-          <span>{home.name || "My Home"}</span>
-          <span className="font-mono text-[var(--lagoon-deep)]">No. 002</span>
+    <main className="page-wrap px-4 pb-8 pt-6">
+      <header className="rise-in mb-6 flex flex-wrap items-end justify-between gap-3 border-b border-[var(--line)] pb-4">
+        <div>
+          <p className="island-kicker mb-1">Behind the walls</p>
+          <h1 className="font-serif text-2xl font-bold text-[var(--sea-ink)] sm:text-3xl">
+            Systems
+          </h1>
         </div>
-        <p className="island-kicker mb-4">Behind the walls</p>
-        <h1 className="display-title mb-5 max-w-3xl text-5xl text-[var(--sea-ink)] sm:text-7xl">
-          Systems<span className="text-[var(--lagoon-deep)]">.</span>
-        </h1>
-        <p className="mb-8 max-w-2xl font-serif text-lg italic text-[var(--sea-ink-soft)] sm:text-xl">
-          {home.address}
-        </p>
-
         <button
           onClick={() => setShowCreate(true)}
-          className="rounded-sm bg-[var(--lagoon-deep)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--on-accent)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          className="rounded-sm bg-[var(--lagoon-deep)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--on-accent)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
         >
           Add System
         </button>
-      </section>
+      </header>
 
       {deleteError && (
         <div className="mt-6 rounded-lg border border-[var(--danger-border)] bg-[var(--danger-bg)] px-4 py-3 text-sm text-[var(--danger-fg)]">

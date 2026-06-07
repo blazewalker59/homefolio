@@ -19,7 +19,7 @@ interface RoomWithItems extends Room {
   items: ItemWithTemplate[];
 }
 
-export const Route = createFileRoute("/rooms")({
+export const Route = createFileRoute("/_app/rooms")({
   loader: async () => {
     try {
       const home = await getHomeFn();
@@ -50,7 +50,7 @@ export const Route = createFileRoute("/rooms")({
 });
 
 function RoomsPage() {
-  const { home, rooms: initialRooms, templates } = Route.useLoaderData();
+  const { rooms: initialRooms, templates } = Route.useLoaderData();
   const [rooms, setRooms] = useState(initialRooms);
   const [showCreate, setShowCreate] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
@@ -125,27 +125,19 @@ function RoomsPage() {
   const addItemRoom = rooms.find((r) => r.id === addItemRoomId);
 
   return (
-    <main className="page-wrap px-4 pb-8 pt-14">
-      <section className="rise-in border-b border-[var(--line)] pb-10 sm:pb-12">
-        <div className="mb-6 flex items-center justify-between text-[0.66rem] font-semibold uppercase tracking-[0.22em] text-[var(--sea-ink-soft)]">
-          <span>{home.name || "My Home"}</span>
-          <span className="font-mono text-[var(--lagoon-deep)]">No. 001</span>
+    <main className="page-wrap px-4 pb-8 pt-6">
+      <header className="rise-in mb-6 flex flex-wrap items-end justify-between gap-3 border-b border-[var(--line)] pb-4">
+        <div>
+          <p className="island-kicker mb-1">A field guide</p>
+          <h1 className="font-serif text-2xl font-bold text-[var(--sea-ink)] sm:text-3xl">Rooms</h1>
         </div>
-        <p className="island-kicker mb-4">A field guide</p>
-        <h1 className="display-title mb-5 max-w-3xl text-5xl text-[var(--sea-ink)] sm:text-7xl">
-          Rooms<span className="text-[var(--lagoon-deep)]">.</span>
-        </h1>
-        <p className="mb-8 max-w-2xl font-serif text-lg italic text-[var(--sea-ink-soft)] sm:text-xl">
-          {home.address}
-        </p>
-
         <button
           onClick={() => setShowCreate(true)}
-          className="rounded-sm bg-[var(--lagoon-deep)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--on-accent)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          className="rounded-sm bg-[var(--lagoon-deep)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--on-accent)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
         >
           Add Room
         </button>
-      </section>
+      </header>
 
       {deleteError && (
         <div className="mt-6 rounded-lg border border-[var(--danger-border)] bg-[var(--danger-bg)] px-4 py-3 text-sm text-[var(--danger-fg)]">
