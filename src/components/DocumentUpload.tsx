@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { uploadDocumentFn } from "@/server/document";
-import { toViewableImage } from "@/lib/heic";
+import { isSupportedWebImage, looksLikeImage, UNSUPPORTED_IMAGE_MESSAGE } from "@/lib/image";
 import type { DocumentType, DocumentEntityType } from "@/lib/storage/types";
 
 interface DocumentUploadProps {
@@ -30,12 +30,18 @@ export function DocumentUpload({ entityType, entityId, onUploadComplete }: Docum
     e.preventDefault();
     if (!file) return;
 
+    // Image files must be a browser-renderable format (so the viewer works);
+    // non-image documents (PDFs, etc.) are unaffected.
+    if (looksLikeImage(file) && !isSupportedWebImage(file)) {
+      setError(UNSUPPORTED_IMAGE_MESSAGE);
+      return;
+    }
+
     setUploading(true);
     setError(null);
 
     try {
-      const uploadFile = await toViewableImage(file);
-      const arrayBuffer = await uploadFile.arrayBuffer();
+      const arrayBuffer = await file.arrayBuffer();
       const base64 = btoa(
         new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), ""),
       );
@@ -45,8 +51,8 @@ export function DocumentUpload({ entityType, entityId, onUploadComplete }: Docum
           entityType,
           entityId,
           type,
-          filename: uploadFile.name,
-          mimeType: uploadFile.type,
+          filename: file.name,
+          mimeType: file.type,
           fileContent: base64,
           notes: notes || undefined,
           amount: type === "receipt" && amount ? amount : undefined,

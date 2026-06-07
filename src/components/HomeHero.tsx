@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ImagePlus, Camera, X } from "lucide-react";
 import { uploadHomePhotoFn, removeHomePhotoFn } from "@/server/home";
-import { toViewableImage } from "@/lib/heic";
+import { isSupportedWebImage, UNSUPPORTED_IMAGE_MESSAGE } from "@/lib/image";
 import type { InferSelectModel } from "drizzle-orm";
 import type { homes } from "@/db/schema";
 
@@ -38,13 +38,17 @@ export function HomeHero({ home }: { home: Home }) {
     : null;
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const selected = e.target.files?.[0];
+    const file = e.target.files?.[0];
     e.target.value = ""; // allow re-selecting the same file later
-    if (!selected) return;
+    if (!file) return;
+
+    if (!isSupportedWebImage(file)) {
+      alert(UNSUPPORTED_IMAGE_MESSAGE);
+      return;
+    }
 
     setPending(true);
     try {
-      const file = await toViewableImage(selected);
       const fileContent = await fileToBase64(file);
       await uploadHomePhotoFn({
         data: { fileContent, mimeType: file.type || "image/jpeg", filename: file.name },
@@ -73,7 +77,13 @@ export function HomeHero({ home }: { home: Home }) {
       className="relative h-52 w-full overflow-hidden border-b border-[var(--line)] sm:h-72"
       style={{ opacity }}
     >
-      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/gif,image/webp"
+        className="hidden"
+        onChange={handleFile}
+      />
 
       {photoUrl ? (
         <>
