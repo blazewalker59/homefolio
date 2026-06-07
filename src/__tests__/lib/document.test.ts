@@ -14,10 +14,15 @@ vi.mock("@/db/client", () => ({
   getDb: vi.fn(),
 }));
 
-vi.mock("@/lib/storage", () => ({
-  getStorageProvider: vi.fn(),
-  generateStorageKey: vi.fn(),
-}));
+vi.mock("@/lib/storage", () => {
+  const getStorageProvider = vi.fn();
+  return {
+    getStorageProvider,
+    // Async resolver used by lib/document; resolve to the same mock provider.
+    ensureStorageProvider: vi.fn(() => Promise.resolve(getStorageProvider())),
+    generateStorageKey: vi.fn(),
+  };
+});
 
 vi.mock("@/lib/activity", () => ({
   logReceiptUploaded: vi.fn().mockResolvedValue({ id: "activity-1" }),

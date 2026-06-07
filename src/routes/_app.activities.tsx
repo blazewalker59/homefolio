@@ -28,7 +28,7 @@ const ACTIVITY_TYPE_ICONS: Record<string, string> = {
   other: "📝",
 };
 
-export const Route = createFileRoute("/activities")({
+export const Route = createFileRoute("/_app/activities")({
   loader: async () => {
     try {
       const home = await getHomeFn();
@@ -53,7 +53,7 @@ export const Route = createFileRoute("/activities")({
 });
 
 function ActivitiesPage() {
-  const { home, activities: initialActivities } = Route.useLoaderData();
+  const { activities: initialActivities } = Route.useLoaderData();
   const [activities, setActivities] = useState(initialActivities);
   const [showForm, setShowForm] = useState(false);
   const [formType, setFormType] = useState<ActivityType>("other");
@@ -153,27 +153,21 @@ function ActivitiesPage() {
   }
 
   return (
-    <main className="page-wrap px-4 pb-8 pt-14">
-      <section className="rise-in border-b border-[var(--line)] pb-10 sm:pb-12">
-        <div className="mb-6 flex items-center justify-between text-[0.66rem] font-semibold uppercase tracking-[0.22em] text-[var(--sea-ink-soft)]">
-          <span>{home.name || "My Home"}</span>
-          <span className="font-mono text-[var(--lagoon-deep)]">No. 005</span>
+    <main className="page-wrap px-4 pb-8 pt-6">
+      <header className="rise-in mb-6 flex flex-wrap items-end justify-between gap-3 border-b border-[var(--line)] pb-4">
+        <div>
+          <p className="island-kicker mb-1">The chronicle</p>
+          <h1 className="font-serif text-2xl font-bold text-[var(--sea-ink)] sm:text-3xl">
+            Activities
+          </h1>
         </div>
-        <p className="island-kicker mb-4">The chronicle</p>
-        <h1 className="display-title mb-5 max-w-3xl text-5xl text-[var(--sea-ink)] sm:text-7xl">
-          Activities<span className="text-[var(--lagoon-deep)]">.</span>
-        </h1>
-        <p className="mb-8 max-w-2xl font-serif text-lg italic text-[var(--sea-ink-soft)] sm:text-xl">
-          A running record of everything that happens in your home.
-        </p>
-
         <button
           onClick={() => setShowForm(true)}
-          className="rounded-sm bg-[var(--lagoon-deep)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--on-accent)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          className="rounded-sm bg-[var(--lagoon-deep)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--on-accent)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
         >
           Log Activity
         </button>
-      </section>
+      </header>
 
       {showForm && (
         <section className="island-shell mt-8 rounded-2xl p-6">

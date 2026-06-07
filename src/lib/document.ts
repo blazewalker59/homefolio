@@ -8,9 +8,9 @@
 
 import { eq, and } from "drizzle-orm";
 import { getDb } from "@/db/client";
-import { documents } from "@/db/schema";
+import { documents, homes } from "@/db/schema";
 import type { DocumentType, DocumentEntityType } from "@/lib/storage/types";
-import { getStorageProvider, generateStorageKey } from "@/lib/storage";
+import { ensureStorageProvider, generateStorageKey } from "@/lib/storage";
 import { logReceiptUploaded } from "@/lib/activity";
 
 export interface CreateDocumentParams {
@@ -35,7 +35,7 @@ export interface CreateDocumentParams {
  */
 export async function createDocument(params: CreateDocumentParams) {
   const db = await getDb();
-  const storage = getStorageProvider();
+  const storage = await ensureStorageProvider();
 
   const storageKey = generateStorageKey(
     params.homeId,
@@ -122,7 +122,7 @@ export async function getDocumentUrl(documentId: string): Promise<string> {
     throw new Error("Document not found");
   }
 
-  const storage = getStorageProvider();
+  const storage = await ensureStorageProvider();
   return storage.getSignedUrl(doc.storageKey);
 }
 
@@ -137,7 +137,7 @@ export async function downloadDocument(documentId: string): Promise<{
   const doc = await getDocument(documentId);
   if (!doc) return null;
 
-  const storage = getStorageProvider();
+  const storage = await ensureStorageProvider();
   const content = await storage.download(doc.storageKey);
   if (!content) return null;
 
@@ -146,6 +146,45 @@ export async function downloadDocument(documentId: string): Promise<{
     filename: doc.filename,
     mimeType: doc.mimeType,
   };
+}
+
+/**
+ * Download a document's content by its storage key.
+ *
+ * Used by the `/api/documents/:key` serving route — `getSignedUrl` points at
+ * that route, so this resolves the key back to bytes + content metadata.
+ */
+export async function downloadByStorageKey(storageKey: string): Promise<{
+  content: ArrayBuffer;
+  filename: string;
+  mimeType: string;
+} | null> {
+  const db = await getDb();
+  const doc = await db.query.documents.findFirst({
+    where: eq(documents.storageKey, storageKey),
+  });
+
+  // Home hero photos aren't documents — they live on the homes table.
+  if (!doc) {
+    const home = await db.query.homes.findFirst({
+      where: eq(homes.photoStorageKey, storageKey),
+    });
+    if (!home) return null;
+    const storage = await ensureStorageProvider();
+    const content = await storage.download(storageKey);
+    if (!content) return null;
+    return {
+      content,
+      filename: "home-photo",
+      mimeType: home.photoContentType ?? "application/octet-stream",
+    };
+  }
+
+  const storage = await ensureStorageProvider();
+  const content = await storage.download(storageKey);
+  if (!content) return null;
+
+  return { content, filename: doc.filename, mimeType: doc.mimeType };
 }
 
 /**
@@ -181,7 +220,7 @@ export async function deleteDocument(documentId: string): Promise<void> {
     throw new Error("Document not found");
   }
 
-  const storage = getStorageProvider();
+  const storage = await ensureStorageProvider();
   await storage.delete(doc.storageKey);
 
   await db.delete(documents).where(eq(documents.id, documentId));

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { uploadDocumentFn } from "@/server/document";
+import { isSupportedWebImage, looksLikeImage, UNSUPPORTED_IMAGE_MESSAGE } from "@/lib/image";
 import type { DocumentType, DocumentEntityType } from "@/lib/storage/types";
 
 interface DocumentUploadProps {
@@ -28,6 +29,13 @@ export function DocumentUpload({ entityType, entityId, onUploadComplete }: Docum
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!file) return;
+
+    // Image files must be a browser-renderable format (so the viewer works);
+    // non-image documents (PDFs, etc.) are unaffected.
+    if (looksLikeImage(file) && !isSupportedWebImage(file)) {
+      setError(UNSUPPORTED_IMAGE_MESSAGE);
+      return;
+    }
 
     setUploading(true);
     setError(null);

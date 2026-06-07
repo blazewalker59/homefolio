@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { Menu } from "@base-ui-components/react/menu";
 
 interface DropdownMenuProps {
   children: ReactNode;
@@ -11,38 +12,31 @@ interface DropdownMenuItemProps {
   disabled?: boolean;
 }
 
+/**
+ * Actions menu built on Base UI's Menu primitive. The popup renders in a
+ * portal, so it escapes the card's `overflow: hidden` / stacking context
+ * (the bug the old hand-rolled absolute-positioned menu had) and gets
+ * keyboard nav, focus management, and outside-click handling for free.
+ */
 export function DropdownMenu({ children }: DropdownMenuProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    function handleClickOutside(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen]);
-
   return (
-    <div ref={menuRef} className="relative shrink-0">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-2 py-1 text-[var(--sea-ink-soft)] transition hover:bg-[var(--link-bg-hover)]"
+    <Menu.Root>
+      <Menu.Trigger
         aria-label="Actions"
+        className="shrink-0 rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-2 py-1 text-[var(--sea-ink-soft)] outline-none transition hover:bg-[var(--link-bg-hover)] focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] data-[popup-open]:bg-[var(--link-bg-hover)]"
       >
-        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
           <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
         </svg>
-      </button>
-      {isOpen && (
-        <div className="absolute right-0 z-50 mt-1 w-32 rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] py-1 shadow-lg">
-          {children}
-        </div>
-      )}
-    </div>
+      </Menu.Trigger>
+      <Menu.Portal>
+        <Menu.Positioner align="end" sideOffset={4} className="z-[70]">
+          <Menu.Popup className="min-w-[8rem] overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] py-1 shadow-lg outline-none">
+            {children}
+          </Menu.Popup>
+        </Menu.Positioner>
+      </Menu.Portal>
+    </Menu.Root>
   );
 }
 
@@ -52,15 +46,18 @@ DropdownMenu.Item = function DropdownMenuItem({
   variant = "default",
   disabled = false,
 }: DropdownMenuItemProps) {
-  const baseClasses = "block w-full px-4 py-2 text-left text-sm transition";
   const variantClasses =
     variant === "danger"
-      ? "text-[var(--danger-fg)] hover:bg-[var(--danger-bg)] disabled:opacity-50"
-      : "text-[var(--sea-ink)] hover:bg-[var(--link-bg-hover)]";
+      ? "text-[var(--danger-fg)] data-[highlighted]:bg-[var(--danger-bg)]"
+      : "text-[var(--sea-ink)] data-[highlighted]:bg-[var(--link-bg-hover)]";
 
   return (
-    <button onClick={onClick} disabled={disabled} className={`${baseClasses} ${variantClasses}`}>
+    <Menu.Item
+      disabled={disabled}
+      onClick={onClick}
+      className={`block w-full cursor-pointer px-4 py-2 text-left text-sm outline-none transition data-[disabled]:cursor-default data-[disabled]:opacity-50 ${variantClasses}`}
+    >
       {children}
-    </button>
+    </Menu.Item>
   );
 };

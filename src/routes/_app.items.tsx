@@ -1,17 +1,13 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useState } from "react";
-import { getHomeFn } from "@/server/home";
 import {
-  seedTemplatesFn,
-  listTemplatesFn,
   listItemsFn,
   createItemFn,
   updateItemFn,
   moveItemFn,
   deleteItemFn,
+  getItemsPageFn,
 } from "@/server/item";
-import { listRoomsFn } from "@/server/room";
-import { listSystemsFn, listSystemUnitsFn } from "@/server/system";
 import { DropdownMenu } from "@/components/DropdownMenu";
 import type { itemTemplates, items, rooms, systemUnits } from "@/db/schema";
 import type { InferSelectModel } from "drizzle-orm";
@@ -25,38 +21,11 @@ type Item = InferSelectModel<typeof items> & {
 type Room = InferSelectModel<typeof rooms>;
 type SystemUnit = InferSelectModel<typeof systemUnits>;
 
-export const Route = createFileRoute("/items")({
+export const Route = createFileRoute("/_app/items")({
   loader: async () => {
     try {
-      const home = await getHomeFn();
-      if (!home?.address) {
-        throw redirect({ to: "/setup" });
-      }
-
-      // Seed templates if needed.
-      await seedTemplatesFn();
-
-      const [templates, allItems, roomsList, systemsList] = await Promise.all([
-        listTemplatesFn(),
-        listItemsFn(),
-        listRoomsFn(),
-        listSystemsFn(),
-      ]);
-
-      // Fetch system units for each system.
-      const allUnits: SystemUnit[] = [];
-      for (const system of systemsList) {
-        const units = await listSystemUnitsFn({ data: { systemId: system.id } });
-        allUnits.push(...units);
-      }
-
-      return {
-        home,
-        templates,
-        items: allItems as Item[],
-        rooms: roomsList,
-        systemUnits: allUnits,
-      };
+      const { templates, items, rooms, systemUnits } = await getItemsPageFn();
+      return { templates, items: items as Item[], rooms, systemUnits };
     } catch (err) {
       if (err instanceof Error && err.message === "Not authenticated") {
         throw redirect({ to: "/sign-in" });
@@ -68,13 +37,7 @@ export const Route = createFileRoute("/items")({
 });
 
 function ItemsPage() {
-  const {
-    home,
-    templates,
-    items: initialItems,
-    rooms: roomsList,
-    systemUnits,
-  } = Route.useLoaderData();
+  const { templates, items: initialItems, rooms: roomsList, systemUnits } = Route.useLoaderData();
 
   const [items, setItems] = useState(initialItems);
   const [showCreate, setShowCreate] = useState(false);
@@ -170,41 +133,27 @@ function ItemsPage() {
   }
 
   return (
-    <main className="page-wrap px-4 pb-8 pt-14">
-      <section className="rise-in border-b border-[var(--line)] pb-10 sm:pb-12">
-        <div className="mb-6 flex items-center justify-between text-[0.66rem] font-semibold uppercase tracking-[0.22em] text-[var(--sea-ink-soft)]">
-          <span>{home.name || "My Home"}</span>
-          <span className="font-mono text-[var(--lagoon-deep)]">No. 003</span>
+    <main className="page-wrap px-4 pb-8 pt-6">
+      <header className="rise-in mb-6 flex flex-wrap items-end justify-between gap-3 border-b border-[var(--line)] pb-4">
+        <div>
+          <p className="island-kicker mb-1">The catalogue</p>
+          <h1 className="font-serif text-2xl font-bold text-[var(--sea-ink)] sm:text-3xl">Items</h1>
         </div>
-        <p className="island-kicker mb-4">The catalogue</p>
-        <h1 className="display-title mb-5 max-w-3xl text-5xl text-[var(--sea-ink)] sm:text-7xl">
-          Items<span className="text-[var(--lagoon-deep)]">.</span>
-        </h1>
-        <p className="mb-8 max-w-2xl font-serif text-lg italic text-[var(--sea-ink-soft)] sm:text-xl">
-          {home.address}
-        </p>
-
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setShowCreate(true)}
-            className="rounded-sm bg-[var(--lagoon-deep)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--on-accent)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            className="rounded-sm bg-[var(--lagoon-deep)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--on-accent)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
           >
             Add Item
           </button>
           <Link
             to="/templates"
-            className="rounded-sm border border-[var(--line)] bg-[var(--surface-strong)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--sea-ink)] transition hover:border-[var(--lagoon-deep)] hover:text-[var(--lagoon-deep)]"
+            className="rounded-sm border border-[var(--line)] bg-[var(--surface-strong)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--sea-ink)] transition hover:border-[var(--lagoon-deep)] hover:text-[var(--lagoon-deep)]"
           >
             Manage Templates
           </Link>
-          <Link
-            to="/"
-            className="rounded-sm border border-[var(--line)] bg-[var(--surface-strong)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--sea-ink)] transition hover:border-[var(--lagoon-deep)] hover:text-[var(--lagoon-deep)]"
-          >
-            Back to Dashboard
-          </Link>
         </div>
-      </section>
+      </header>
 
       {deleteError && (
         <div className="mt-6 rounded-lg border border-[var(--danger-border)] bg-[var(--danger-bg)] px-4 py-3 text-sm text-[var(--danger-fg)]">

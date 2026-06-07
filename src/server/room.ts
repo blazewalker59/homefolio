@@ -14,8 +14,59 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getHome } from "@/lib/home";
 import { createRoom, listRooms, updateRoom, deleteRoom, getRoom } from "@/lib/room";
+import { seedBuiltInTemplates, listTemplates, listItems } from "@/lib/item";
+import { listDocumentsByHome } from "@/lib/document";
+import { BUILT_IN_TEMPLATES } from "@/lib/item-templates";
 import { requireSessionUser } from "@/lib/auth/session";
 import { ROOM_CATEGORIES } from "@/lib/room-categories";
+
+/**
+ * All data the Rooms page needs, in a single round trip: rooms (each with
+ * their items) plus the template list. Replaces the loader's old waterfall
+ * of getHome → listRooms → seedTemplates → listTemplates → N× listItemsByRoom
+ * with one server call that fans out across the DB server-side.
+ */
+export const getRoomsPageFn = createServerFn({ method: "GET" }).handler(async () => {
+  const user = await requireSessionUser();
+  const home = await getHome(user.id);
+  if (!home) return { rooms: [], templates: [] };
+
+  await seedBuiltInTemplates(BUILT_IN_TEMPLATES);
+  const [roomsList, allItemsRaw, templates, allDocs] = await Promise.all([
+    listRooms(home.id),
+    listItems(home.id),
+    listTemplates(home.id),
+    listDocumentsByHome(home.id),
+  ]);
+  // `fields` is jsonb (Record<string, unknown>); narrow to the serializable
+  // shape TanStack Start requires for server-function return values.
+  const allItems = allItemsRaw as Array<
+    (typeof allItemsRaw)[number] & { fields: Record<string, string | number | boolean | null> }
+  >;
+
+  const itemsByRoom = new Map<string, typeof allItems>();
+  for (const item of allItems) {
+    if (!item.roomId) continue;
+    const bucket = itemsByRoom.get(item.roomId);
+    if (bucket) bucket.push(item);
+    else itemsByRoom.set(item.roomId, [item]);
+  }
+
+  const docsByRoom = new Map<string, typeof allDocs>();
+  for (const doc of allDocs) {
+    if (doc.entityType !== "room") continue;
+    const bucket = docsByRoom.get(doc.entityId);
+    if (bucket) bucket.push(doc);
+    else docsByRoom.set(doc.entityId, [doc]);
+  }
+
+  const rooms = roomsList.map((room) => ({
+    ...room,
+    items: itemsByRoom.get(room.id) ?? [],
+    documents: docsByRoom.get(room.id) ?? [],
+  }));
+  return { rooms, templates };
+});
 
 /**
  * List all rooms for the current user's home.

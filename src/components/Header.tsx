@@ -1,9 +1,20 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { signOut, useAuth } from "@/lib/auth/hooks";
+import { useSidebar } from "@/lib/sidebar-context";
 import ThemeToggle from "./ThemeToggle";
 
+// Routes that live inside the tabbed `_app` layout, where the config sidebar
+// (and its mobile drawer) provide the user/home/search/theme controls.
+const APP_PREFIXES = ["/rooms", "/systems", "/items", "/documents", "/activities"];
+
 export default function Header() {
-  const { status } = useAuth();
+  const { status, user } = useAuth();
+  const { setOpen } = useSidebar();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isAppRoute = APP_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+
+  const avatar = user?.avatarUrl || user?.image || null;
+  const initial = (user?.displayName || user?.name || "?").trim().charAt(0).toUpperCase() || "?";
 
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--line)] bg-[var(--header-bg)] backdrop-blur-lg">
@@ -28,16 +39,24 @@ export default function Header() {
         </Link>
 
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-          {status === "authenticated" && (
-            <>
-              <Link
-                to="/search"
-                search={{ q: "" }}
-                className="rounded-sm px-3 py-1.5 text-sm font-medium text-[var(--sea-ink-soft)] no-underline transition hover:bg-[var(--link-bg-hover)] hover:text-[var(--sea-ink)]"
-                aria-label="Search"
+          {status === "authenticated" &&
+            isAppRoute && (
+              // Opens the config popout drawer at every breakpoint.
+              <button
+                type="button"
+                onClick={() => setOpen(true)}
+                aria-label="Account & settings"
+                className="grid h-9 w-9 place-items-center overflow-hidden rounded-full border border-[var(--line)] bg-[var(--surface-strong)] text-sm font-bold text-[var(--lagoon-deep)] transition hover:border-[var(--lagoon-deep)]"
               >
-                🔍
-              </Link>
+                {avatar ? (
+                  <img src={avatar} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  initial
+                )}
+              </button>
+            )}
+          {status === "authenticated" && !isAppRoute && (
+            <>
               <button
                 type="button"
                 onClick={() => signOut()}
@@ -45,17 +64,20 @@ export default function Header() {
               >
                 Sign out
               </button>
+              <ThemeToggle />
             </>
           )}
           {status === "anonymous" && (
-            <Link
-              to="/sign-in"
-              className="rounded-sm px-3 py-1.5 text-sm font-medium text-[var(--sea-ink-soft)] no-underline transition hover:bg-[var(--link-bg-hover)] hover:text-[var(--sea-ink)]"
-            >
-              Sign in
-            </Link>
+            <>
+              <Link
+                to="/sign-in"
+                className="rounded-sm px-3 py-1.5 text-sm font-medium text-[var(--sea-ink-soft)] no-underline transition hover:bg-[var(--link-bg-hover)] hover:text-[var(--sea-ink)]"
+              >
+                Sign in
+              </Link>
+              <ThemeToggle />
+            </>
           )}
-          <ThemeToggle />
         </div>
       </div>
     </header>

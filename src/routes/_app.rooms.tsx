@@ -1,44 +1,32 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
-import { getHomeFn } from "@/server/home";
-import { listRoomsFn, createRoomFn, updateRoomFn, deleteRoomFn } from "@/server/room";
-import { seedTemplatesFn, listTemplatesFn, listItemsByRoomFn, createItemFn } from "@/server/item";
+import { createRoomFn, updateRoomFn, deleteRoomFn, getRoomsPageFn } from "@/server/room";
+import { listItemsByRoomFn, createItemFn, updateItemFn, deleteItemFn } from "@/server/item";
 import { ROOM_CATEGORIES, getRoomCategory } from "@/lib/room-categories";
 import { ItemFormModal } from "@/components/ItemFormModal";
+import { ItemDetailModal } from "@/components/ItemDetailModal";
+import { DocumentsSection } from "@/components/DocumentsSection";
 import { DropdownMenu } from "@/components/DropdownMenu";
-import { rooms, itemTemplates, items } from "@/db/schema";
+import { rooms, itemTemplates, items, documents } from "@/db/schema";
 import type { InferSelectModel } from "drizzle-orm";
 
 type Room = InferSelectModel<typeof rooms>;
 type Template = InferSelectModel<typeof itemTemplates>;
+type Document = InferSelectModel<typeof documents>;
 type ItemWithTemplate = InferSelectModel<typeof items> & {
   template?: Template;
 };
 
 interface RoomWithItems extends Room {
   items: ItemWithTemplate[];
+  documents: Document[];
 }
 
-export const Route = createFileRoute("/rooms")({
+export const Route = createFileRoute("/_app/rooms")({
   loader: async () => {
     try {
-      const home = await getHomeFn();
-      if (!home?.address) {
-        throw redirect({ to: "/setup" });
-      }
-      const roomsList = await listRoomsFn();
-
-      await seedTemplatesFn();
-      const templates = await listTemplatesFn();
-
-      const roomsWithItems: RoomWithItems[] = await Promise.all(
-        roomsList.map(async (room) => {
-          const roomItems = await listItemsByRoomFn({ data: { roomId: room.id } });
-          return { ...room, items: roomItems as ItemWithTemplate[] };
-        }),
-      );
-
-      return { home, rooms: roomsWithItems, templates };
+      const { rooms, templates } = await getRoomsPageFn();
+      return { rooms: rooms as RoomWithItems[], templates };
     } catch (err) {
       if (err instanceof Error && err.message === "Not authenticated") {
         throw redirect({ to: "/sign-in" });
@@ -50,11 +38,12 @@ export const Route = createFileRoute("/rooms")({
 });
 
 function RoomsPage() {
-  const { home, rooms: initialRooms, templates } = Route.useLoaderData();
+  const { rooms: initialRooms, templates } = Route.useLoaderData();
   const [rooms, setRooms] = useState(initialRooms);
   const [showCreate, setShowCreate] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [addItemRoomId, setAddItemRoomId] = useState<string | null>(null);
+  const [viewingItem, setViewingItem] = useState<ItemWithTemplate | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -62,7 +51,7 @@ function RoomsPage() {
     setPending(true);
     try {
       const newRoom = await createRoomFn({ data });
-      setRooms((prev) => [...prev, { ...newRoom, items: [] }]);
+      setRooms((prev) => [...prev, { ...newRoom, items: [], documents: [] }]);
       setShowCreate(false);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to create room");
@@ -122,30 +111,60 @@ function RoomsPage() {
     }
   }
 
+  async function refreshRoomItems(roomId: string) {
+    const updatedItems = await listItemsByRoomFn({ data: { roomId } });
+    setRooms((prev) =>
+      prev.map((r) => (r.id === roomId ? { ...r, items: updatedItems as ItemWithTemplate[] } : r)),
+    );
+  }
+
+  async function handleUpdateItem(data: { name: string; fields: Record<string, unknown> }) {
+    if (!viewingItem?.roomId) return;
+    setPending(true);
+    try {
+      await updateItemFn({
+        data: { itemId: viewingItem.id, name: data.name, fields: data.fields },
+      });
+      await refreshRoomItems(viewingItem.roomId);
+      setViewingItem(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to update item");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function handleDeleteItem() {
+    if (!viewingItem?.roomId) return;
+    setPending(true);
+    try {
+      await deleteItemFn({ data: { itemId: viewingItem.id } });
+      await refreshRoomItems(viewingItem.roomId);
+      setViewingItem(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to delete item");
+    } finally {
+      setPending(false);
+    }
+  }
+
   const addItemRoom = rooms.find((r) => r.id === addItemRoomId);
+  const viewingItemRoom = rooms.find((r) => r.id === viewingItem?.roomId);
 
   return (
-    <main className="page-wrap px-4 pb-8 pt-14">
-      <section className="rise-in border-b border-[var(--line)] pb-10 sm:pb-12">
-        <div className="mb-6 flex items-center justify-between text-[0.66rem] font-semibold uppercase tracking-[0.22em] text-[var(--sea-ink-soft)]">
-          <span>{home.name || "My Home"}</span>
-          <span className="font-mono text-[var(--lagoon-deep)]">No. 001</span>
+    <main className="page-wrap px-4 pb-8 pt-6">
+      <header className="rise-in mb-6 flex flex-wrap items-end justify-between gap-3 border-b border-[var(--line)] pb-4">
+        <div>
+          <p className="island-kicker mb-1">A field guide</p>
+          <h1 className="font-serif text-2xl font-bold text-[var(--sea-ink)] sm:text-3xl">Rooms</h1>
         </div>
-        <p className="island-kicker mb-4">A field guide</p>
-        <h1 className="display-title mb-5 max-w-3xl text-5xl text-[var(--sea-ink)] sm:text-7xl">
-          Rooms<span className="text-[var(--lagoon-deep)]">.</span>
-        </h1>
-        <p className="mb-8 max-w-2xl font-serif text-lg italic text-[var(--sea-ink-soft)] sm:text-xl">
-          {home.address}
-        </p>
-
         <button
           onClick={() => setShowCreate(true)}
-          className="rounded-sm bg-[var(--lagoon-deep)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--on-accent)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          className="rounded-sm bg-[var(--lagoon-deep)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--on-accent)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
         >
           Add Room
         </button>
-      </section>
+      </header>
 
       {deleteError && (
         <div className="mt-6 rounded-lg border border-[var(--danger-border)] bg-[var(--danger-bg)] px-4 py-3 text-sm text-[var(--danger-fg)]">
@@ -171,6 +190,7 @@ function RoomsPage() {
               onEdit={() => setEditingRoom(room)}
               onDelete={() => handleDelete(room.id)}
               onAddItem={() => setAddItemRoomId(room.id)}
+              onViewItem={(item) => setViewingItem(item)}
               pending={pending}
             />
           ))}
@@ -207,6 +227,17 @@ function RoomsPage() {
           pending={pending}
         />
       )}
+
+      {viewingItem && (
+        <ItemDetailModal
+          item={viewingItem}
+          locationLabel={viewingItemRoom?.name}
+          onSave={handleUpdateItem}
+          onDelete={handleDeleteItem}
+          onCancel={() => setViewingItem(null)}
+          pending={pending}
+        />
+      )}
     </main>
   );
 }
@@ -216,12 +247,14 @@ function RoomCard({
   onEdit,
   onDelete,
   onAddItem,
+  onViewItem,
   pending,
 }: {
   room: RoomWithItems;
   onEdit: () => void;
   onDelete: () => void;
   onAddItem: () => void;
+  onViewItem: (item: ItemWithTemplate) => void;
   pending: boolean;
 }) {
   const category = getRoomCategory(room.category);
@@ -257,18 +290,23 @@ function RoomCard({
             {room.items.length} {room.items.length === 1 ? "item" : "items"}
           </p>
           {room.items.map((item) => (
-            <div
+            <button
               key={item.id}
-              className="flex items-center justify-between rounded-lg bg-[var(--link-bg-hover)] px-3 py-1.5"
+              type="button"
+              onClick={() => onViewItem(item)}
+              disabled={pending}
+              className="flex w-full items-center justify-between rounded-lg bg-[var(--link-bg-hover)] px-3 py-1.5 text-left transition hover:bg-[var(--lagoon-deep)]/10 disabled:opacity-50"
             >
               <span className="text-sm text-[var(--sea-ink)]">{item.name}</span>
               {item.template && (
                 <span className="text-xs text-[var(--sea-ink-soft)]">{item.template.category}</span>
               )}
-            </div>
+            </button>
           ))}
         </div>
       )}
+
+      <DocumentsSection documents={room.documents} />
 
       <button
         onClick={onAddItem}

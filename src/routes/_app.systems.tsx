@@ -1,30 +1,26 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
-import { getHomeFn } from "@/server/home";
 import {
-  listSystemsFn,
   createSystemFn,
   updateSystemFn,
   deleteSystemFn,
   createSystemUnitFn,
   updateSystemUnitFn,
   deleteSystemUnitFn,
-  listSystemUnitsFn,
+  getSystemsPageFn,
 } from "@/server/system";
-import {
-  seedTemplatesFn,
-  listTemplatesFn,
-  listItemsBySystemUnitFn,
-  createItemFn,
-} from "@/server/item";
+import { listItemsBySystemUnitFn, createItemFn, updateItemFn, deleteItemFn } from "@/server/item";
 import { ItemFormModal } from "@/components/ItemFormModal";
+import { ItemDetailModal } from "@/components/ItemDetailModal";
+import { DocumentsSection } from "@/components/DocumentsSection";
 import { DropdownMenu } from "@/components/DropdownMenu";
-import { systems, systemUnits, itemTemplates, items } from "@/db/schema";
+import { systems, systemUnits, itemTemplates, items, documents } from "@/db/schema";
 import type { InferSelectModel } from "drizzle-orm";
 
 type System = InferSelectModel<typeof systems>;
 type SystemUnit = InferSelectModel<typeof systemUnits>;
 type Template = InferSelectModel<typeof itemTemplates>;
+type Document = InferSelectModel<typeof documents>;
 type ItemWithTemplate = InferSelectModel<typeof items> & {
   template?: Template;
 };
@@ -35,34 +31,14 @@ interface SystemUnitWithItems extends SystemUnit {
 
 interface SystemWithUnits extends System {
   units: SystemUnitWithItems[];
+  documents: Document[];
 }
 
-export const Route = createFileRoute("/systems")({
+export const Route = createFileRoute("/_app/systems")({
   loader: async () => {
     try {
-      const home = await getHomeFn();
-      if (!home?.address) {
-        throw redirect({ to: "/setup" });
-      }
-      const systemsList = await listSystemsFn();
-
-      await seedTemplatesFn();
-      const templates = await listTemplatesFn();
-
-      const systemsWithUnits: SystemWithUnits[] = await Promise.all(
-        systemsList.map(async (system) => {
-          const units = await listSystemUnitsFn({ data: { systemId: system.id } });
-          const unitsWithItems: SystemUnitWithItems[] = await Promise.all(
-            units.map(async (unit) => {
-              const unitItems = await listItemsBySystemUnitFn({ data: { systemUnitId: unit.id } });
-              return { ...unit, items: unitItems as ItemWithTemplate[] };
-            }),
-          );
-          return { ...system, units: unitsWithItems };
-        }),
-      );
-
-      return { home, systems: systemsWithUnits, templates };
+      const { systems, templates } = await getSystemsPageFn();
+      return { systems: systems as SystemWithUnits[], templates };
     } catch (err) {
       if (err instanceof Error && err.message === "Not authenticated") {
         throw redirect({ to: "/sign-in" });
@@ -74,13 +50,14 @@ export const Route = createFileRoute("/systems")({
 });
 
 function SystemsPage() {
-  const { home, systems: initialSystems, templates } = Route.useLoaderData();
+  const { systems: initialSystems, templates } = Route.useLoaderData();
   const [systems, setSystems] = useState(initialSystems);
   const [showCreate, setShowCreate] = useState(false);
   const [editingSystem, setEditingSystem] = useState<System | null>(null);
   const [addUnitSystem, setAddUnitSystem] = useState<System | null>(null);
   const [editingUnit, setEditingUnit] = useState<SystemUnit | null>(null);
   const [addItemUnitId, setAddItemUnitId] = useState<string | null>(null);
+  const [viewingItem, setViewingItem] = useState<ItemWithTemplate | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -88,7 +65,7 @@ function SystemsPage() {
     setPending(true);
     try {
       const newSystem = await createSystemFn({ data });
-      setSystems((prev) => [...prev, { ...newSystem, units: [] }]);
+      setSystems((prev) => [...prev, { ...newSystem, units: [], documents: [] }]);
       setShowCreate(false);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to create system");
@@ -202,30 +179,69 @@ function SystemsPage() {
     }
   }
 
+  async function refreshUnitItems(systemUnitId: string) {
+    const updatedItems = await listItemsBySystemUnitFn({ data: { systemUnitId } });
+    setSystems((prev) =>
+      prev.map((s) => ({
+        ...s,
+        units: s.units.map((u) =>
+          u.id === systemUnitId ? { ...u, items: updatedItems as ItemWithTemplate[] } : u,
+        ),
+      })),
+    );
+  }
+
+  async function handleUpdateItem(data: { name: string; fields: Record<string, unknown> }) {
+    if (!viewingItem?.systemUnitId) return;
+    setPending(true);
+    try {
+      await updateItemFn({
+        data: { itemId: viewingItem.id, name: data.name, fields: data.fields },
+      });
+      await refreshUnitItems(viewingItem.systemUnitId);
+      setViewingItem(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to update item");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function handleDeleteItem() {
+    if (!viewingItem?.systemUnitId) return;
+    setPending(true);
+    try {
+      await deleteItemFn({ data: { itemId: viewingItem.id } });
+      await refreshUnitItems(viewingItem.systemUnitId);
+      setViewingItem(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to delete item");
+    } finally {
+      setPending(false);
+    }
+  }
+
   const addItemUnit = systems.flatMap((s) => s.units).find((u) => u.id === addItemUnitId);
+  const viewingItemUnit = systems
+    .flatMap((s) => s.units)
+    .find((u) => u.id === viewingItem?.systemUnitId);
 
   return (
-    <main className="page-wrap px-4 pb-8 pt-14">
-      <section className="rise-in border-b border-[var(--line)] pb-10 sm:pb-12">
-        <div className="mb-6 flex items-center justify-between text-[0.66rem] font-semibold uppercase tracking-[0.22em] text-[var(--sea-ink-soft)]">
-          <span>{home.name || "My Home"}</span>
-          <span className="font-mono text-[var(--lagoon-deep)]">No. 002</span>
+    <main className="page-wrap px-4 pb-8 pt-6">
+      <header className="rise-in mb-6 flex flex-wrap items-end justify-between gap-3 border-b border-[var(--line)] pb-4">
+        <div>
+          <p className="island-kicker mb-1">Behind the walls</p>
+          <h1 className="font-serif text-2xl font-bold text-[var(--sea-ink)] sm:text-3xl">
+            Systems
+          </h1>
         </div>
-        <p className="island-kicker mb-4">Behind the walls</p>
-        <h1 className="display-title mb-5 max-w-3xl text-5xl text-[var(--sea-ink)] sm:text-7xl">
-          Systems<span className="text-[var(--lagoon-deep)]">.</span>
-        </h1>
-        <p className="mb-8 max-w-2xl font-serif text-lg italic text-[var(--sea-ink-soft)] sm:text-xl">
-          {home.address}
-        </p>
-
         <button
           onClick={() => setShowCreate(true)}
-          className="rounded-sm bg-[var(--lagoon-deep)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--on-accent)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          className="rounded-sm bg-[var(--lagoon-deep)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--on-accent)] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
         >
           Add System
         </button>
-      </section>
+      </header>
 
       {deleteError && (
         <div className="mt-6 rounded-lg border border-[var(--danger-border)] bg-[var(--danger-bg)] px-4 py-3 text-sm text-[var(--danger-fg)]">
@@ -254,6 +270,7 @@ function SystemsPage() {
               onEditUnit={(unit) => setEditingUnit(unit)}
               onDeleteUnit={(unitId) => handleDeleteUnit(unitId, system.id)}
               onAddItem={(unitId) => setAddItemUnitId(unitId)}
+              onViewItem={(item) => setViewingItem(item)}
               pending={pending}
             />
           ))}
@@ -312,6 +329,17 @@ function SystemsPage() {
           pending={pending}
         />
       )}
+
+      {viewingItem && (
+        <ItemDetailModal
+          item={viewingItem}
+          locationLabel={viewingItemUnit?.name}
+          onSave={handleUpdateItem}
+          onDelete={handleDeleteItem}
+          onCancel={() => setViewingItem(null)}
+          pending={pending}
+        />
+      )}
     </main>
   );
 }
@@ -324,6 +352,7 @@ function SystemCard({
   onEditUnit,
   onDeleteUnit,
   onAddItem,
+  onViewItem,
   pending,
 }: {
   system: SystemWithUnits;
@@ -333,6 +362,7 @@ function SystemCard({
   onEditUnit: (unit: SystemUnitWithItems) => void;
   onDeleteUnit: (unitId: string) => void;
   onAddItem: (unitId: string) => void;
+  onViewItem: (item: ItemWithTemplate) => void;
   pending: boolean;
 }) {
   return (
@@ -377,9 +407,12 @@ function SystemCard({
               {unit.items.length > 0 && (
                 <div className="mt-2 space-y-1">
                   {unit.items.map((item) => (
-                    <div
+                    <button
                       key={item.id}
-                      className="flex items-center justify-between rounded bg-[var(--surface-strong)] px-2 py-1"
+                      type="button"
+                      onClick={() => onViewItem(item)}
+                      disabled={pending}
+                      className="flex w-full items-center justify-between rounded bg-[var(--surface-strong)] px-2 py-1 text-left transition hover:bg-[var(--lagoon-deep)]/10 disabled:opacity-50"
                     >
                       <span className="text-xs text-[var(--sea-ink)]">{item.name}</span>
                       {item.template && (
@@ -387,7 +420,7 @@ function SystemCard({
                           {item.template.category}
                         </span>
                       )}
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}
@@ -403,6 +436,8 @@ function SystemCard({
           ))}
         </div>
       )}
+
+      <DocumentsSection documents={system.documents} />
 
       <button
         onClick={onAddUnit}

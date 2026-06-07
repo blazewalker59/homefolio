@@ -162,6 +162,8 @@ export const homes = pgTable(
     purchaseDate: timestamp("purchase_date", { withTimezone: true }),
     soldAt: timestamp("sold_at", { withTimezone: true }),
     salePrice: numeric("sale_price", { precision: 12, scale: 2 }),
+    photoStorageKey: text("photo_storage_key"),
+    photoContentType: text("photo_content_type"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

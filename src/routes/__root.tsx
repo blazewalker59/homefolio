@@ -1,8 +1,8 @@
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { TanStackDevtools } from "@tanstack/react-devtools";
-import Footer from "../components/Footer";
 import Header from "../components/Header";
+import { SidebarProvider } from "@/lib/sidebar-context";
 
 import appCss from "../styles.css?url";
 
@@ -16,11 +16,11 @@ export const Route = createRootRoute({
       },
       {
         name: "viewport",
-        content: "width=device-width, initial-scale=1",
+        content: "width=device-width, initial-scale=1, viewport-fit=cover",
       },
       {
         name: "theme-color",
-        content: "#8a611e",
+        content: "#2c5e42",
       },
       {
         title: "Homefolio",
@@ -38,7 +38,8 @@ export const Route = createRootRoute({
       },
       {
         rel: "apple-touch-icon",
-        href: "/favicon.svg?v=1",
+        sizes: "180x180",
+        href: "/apple-touch-icon.png?v=1",
       },
       {
         rel: "manifest",
@@ -57,9 +58,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body className="font-sans antialiased [overflow-wrap:anywhere]">
-        <Header />
-        {children}
-        <Footer />
+        <SidebarProvider>
+          <Header />
+          {children}
+        </SidebarProvider>
         <TanStackDevtools
           config={{
             position: "bottom-right",

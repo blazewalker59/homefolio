@@ -10,25 +10,21 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TemplatesRouteImport } from './routes/templates'
-import { Route as SystemsRouteImport } from './routes/systems'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SetupRouteImport } from './routes/setup'
 import { Route as SearchRouteImport } from './routes/search'
-import { Route as RoomsRouteImport } from './routes/rooms'
-import { Route as ItemsRouteImport } from './routes/items'
-import { Route as DocumentsRouteImport } from './routes/documents'
-import { Route as ActivitiesRouteImport } from './routes/activities'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppSystemsRouteImport } from './routes/_app.systems'
+import { Route as AppRoomsRouteImport } from './routes/_app.rooms'
+import { Route as AppItemsRouteImport } from './routes/_app.items'
+import { Route as AppDocumentsRouteImport } from './routes/_app.documents'
+import { Route as AppActivitiesRouteImport } from './routes/_app.activities'
 
 const TemplatesRoute = TemplatesRouteImport.update({
   id: '/templates',
   path: '/templates',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SystemsRoute = SystemsRouteImport.update({
-  id: '/systems',
-  path: '/systems',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignInRoute = SignInRouteImport.update({
@@ -46,29 +42,13 @@ const SearchRoute = SearchRouteImport.update({
   path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RoomsRoute = RoomsRouteImport.update({
-  id: '/rooms',
-  path: '/rooms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ItemsRoute = ItemsRouteImport.update({
-  id: '/items',
-  path: '/items',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DocumentsRoute = DocumentsRouteImport.update({
-  id: '/documents',
-  path: '/documents',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ActivitiesRoute = ActivitiesRouteImport.update({
-  id: '/activities',
-  path: '/activities',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -76,100 +56,123 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppSystemsRoute = AppSystemsRouteImport.update({
+  id: '/systems',
+  path: '/systems',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRoomsRoute = AppRoomsRouteImport.update({
+  id: '/rooms',
+  path: '/rooms',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppItemsRoute = AppItemsRouteImport.update({
+  id: '/items',
+  path: '/items',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDocumentsRoute = AppDocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppActivitiesRoute = AppActivitiesRouteImport.update({
+  id: '/activities',
+  path: '/activities',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/activities': typeof ActivitiesRoute
-  '/documents': typeof DocumentsRoute
-  '/items': typeof ItemsRoute
-  '/rooms': typeof RoomsRoute
   '/search': typeof SearchRoute
   '/setup': typeof SetupRoute
   '/sign-in': typeof SignInRoute
-  '/systems': typeof SystemsRoute
   '/templates': typeof TemplatesRoute
+  '/activities': typeof AppActivitiesRoute
+  '/documents': typeof AppDocumentsRoute
+  '/items': typeof AppItemsRoute
+  '/rooms': typeof AppRoomsRoute
+  '/systems': typeof AppSystemsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/activities': typeof ActivitiesRoute
-  '/documents': typeof DocumentsRoute
-  '/items': typeof ItemsRoute
-  '/rooms': typeof RoomsRoute
   '/search': typeof SearchRoute
   '/setup': typeof SetupRoute
   '/sign-in': typeof SignInRoute
-  '/systems': typeof SystemsRoute
   '/templates': typeof TemplatesRoute
+  '/activities': typeof AppActivitiesRoute
+  '/documents': typeof AppDocumentsRoute
+  '/items': typeof AppItemsRoute
+  '/rooms': typeof AppRoomsRoute
+  '/systems': typeof AppSystemsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
   '/about': typeof AboutRoute
-  '/activities': typeof ActivitiesRoute
-  '/documents': typeof DocumentsRoute
-  '/items': typeof ItemsRoute
-  '/rooms': typeof RoomsRoute
   '/search': typeof SearchRoute
   '/setup': typeof SetupRoute
   '/sign-in': typeof SignInRoute
-  '/systems': typeof SystemsRoute
   '/templates': typeof TemplatesRoute
+  '/_app/activities': typeof AppActivitiesRoute
+  '/_app/documents': typeof AppDocumentsRoute
+  '/_app/items': typeof AppItemsRoute
+  '/_app/rooms': typeof AppRoomsRoute
+  '/_app/systems': typeof AppSystemsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/about'
+    | '/search'
+    | '/setup'
+    | '/sign-in'
+    | '/templates'
     | '/activities'
     | '/documents'
     | '/items'
     | '/rooms'
-    | '/search'
-    | '/setup'
-    | '/sign-in'
     | '/systems'
-    | '/templates'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
+    | '/search'
+    | '/setup'
+    | '/sign-in'
+    | '/templates'
     | '/activities'
     | '/documents'
     | '/items'
     | '/rooms'
-    | '/search'
-    | '/setup'
-    | '/sign-in'
     | '/systems'
-    | '/templates'
   id:
     | '__root__'
     | '/'
+    | '/_app'
     | '/about'
-    | '/activities'
-    | '/documents'
-    | '/items'
-    | '/rooms'
     | '/search'
     | '/setup'
     | '/sign-in'
-    | '/systems'
     | '/templates'
+    | '/_app/activities'
+    | '/_app/documents'
+    | '/_app/items'
+    | '/_app/rooms'
+    | '/_app/systems'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
   AboutRoute: typeof AboutRoute
-  ActivitiesRoute: typeof ActivitiesRoute
-  DocumentsRoute: typeof DocumentsRoute
-  ItemsRoute: typeof ItemsRoute
-  RoomsRoute: typeof RoomsRoute
   SearchRoute: typeof SearchRoute
   SetupRoute: typeof SetupRoute
   SignInRoute: typeof SignInRoute
-  SystemsRoute: typeof SystemsRoute
   TemplatesRoute: typeof TemplatesRoute
 }
 
@@ -180,13 +183,6 @@ declare module '@tanstack/react-router' {
       path: '/templates'
       fullPath: '/templates'
       preLoaderRoute: typeof TemplatesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/systems': {
-      id: '/systems'
-      path: '/systems'
-      fullPath: '/systems'
-      preLoaderRoute: typeof SystemsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sign-in': {
@@ -210,39 +206,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/rooms': {
-      id: '/rooms'
-      path: '/rooms'
-      fullPath: '/rooms'
-      preLoaderRoute: typeof RoomsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/items': {
-      id: '/items'
-      path: '/items'
-      fullPath: '/items'
-      preLoaderRoute: typeof ItemsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/documents': {
-      id: '/documents'
-      path: '/documents'
-      fullPath: '/documents'
-      preLoaderRoute: typeof DocumentsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/activities': {
-      id: '/activities'
-      path: '/activities'
-      fullPath: '/activities'
-      preLoaderRoute: typeof ActivitiesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/about': {
       id: '/about'
       path: '/about'
       fullPath: '/about'
       preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -252,20 +227,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/systems': {
+      id: '/_app/systems'
+      path: '/systems'
+      fullPath: '/systems'
+      preLoaderRoute: typeof AppSystemsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/rooms': {
+      id: '/_app/rooms'
+      path: '/rooms'
+      fullPath: '/rooms'
+      preLoaderRoute: typeof AppRoomsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/items': {
+      id: '/_app/items'
+      path: '/items'
+      fullPath: '/items'
+      preLoaderRoute: typeof AppItemsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/documents': {
+      id: '/_app/documents'
+      path: '/documents'
+      fullPath: '/documents'
+      preLoaderRoute: typeof AppDocumentsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/activities': {
+      id: '/_app/activities'
+      path: '/activities'
+      fullPath: '/activities'
+      preLoaderRoute: typeof AppActivitiesRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
+interface AppRouteChildren {
+  AppActivitiesRoute: typeof AppActivitiesRoute
+  AppDocumentsRoute: typeof AppDocumentsRoute
+  AppItemsRoute: typeof AppItemsRoute
+  AppRoomsRoute: typeof AppRoomsRoute
+  AppSystemsRoute: typeof AppSystemsRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppActivitiesRoute: AppActivitiesRoute,
+  AppDocumentsRoute: AppDocumentsRoute,
+  AppItemsRoute: AppItemsRoute,
+  AppRoomsRoute: AppRoomsRoute,
+  AppSystemsRoute: AppSystemsRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
   AboutRoute: AboutRoute,
-  ActivitiesRoute: ActivitiesRoute,
-  DocumentsRoute: DocumentsRoute,
-  ItemsRoute: ItemsRoute,
-  RoomsRoute: RoomsRoute,
   SearchRoute: SearchRoute,
   SetupRoute: SetupRoute,
   SignInRoute: SignInRoute,
-  SystemsRoute: SystemsRoute,
   TemplatesRoute: TemplatesRoute,
 }
 export const routeTree = rootRouteImport
