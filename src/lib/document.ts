@@ -8,7 +8,7 @@
 
 import { eq, and } from "drizzle-orm";
 import { getDb } from "@/db/client";
-import { documents } from "@/db/schema";
+import { documents, homes } from "@/db/schema";
 import type { DocumentType, DocumentEntityType } from "@/lib/storage/types";
 import { getStorageProvider, generateStorageKey } from "@/lib/storage";
 import { logReceiptUploaded } from "@/lib/activity";
@@ -163,7 +163,22 @@ export async function downloadByStorageKey(storageKey: string): Promise<{
   const doc = await db.query.documents.findFirst({
     where: eq(documents.storageKey, storageKey),
   });
-  if (!doc) return null;
+
+  // Home hero photos aren't documents — they live on the homes table.
+  if (!doc) {
+    const home = await db.query.homes.findFirst({
+      where: eq(homes.photoStorageKey, storageKey),
+    });
+    if (!home) return null;
+    const storage = getStorageProvider();
+    const content = await storage.download(storageKey);
+    if (!content) return null;
+    return {
+      content,
+      filename: "home-photo",
+      mimeType: home.photoContentType ?? "application/octet-stream",
+    };
+  }
 
   const storage = getStorageProvider();
   const content = await storage.download(storageKey);

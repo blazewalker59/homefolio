@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { getHomeOverviewFn } from "@/server/home";
 import ConfigSidebar from "@/components/ConfigSidebar";
 import SectionTabs from "@/components/SectionTabs";
+import { HomeHero } from "@/components/HomeHero";
 import { useSidebar } from "@/lib/sidebar-context";
 
 export const Route = createFileRoute("/_app")({
@@ -36,6 +37,7 @@ function AppLayout() {
 
   return (
     <>
+      <HomeHero home={home} />
       <SectionTabs />
       {/* Bottom padding clears the fixed mobile tab bar (hidden at md+). */}
       <div className="pb-24 md:pb-10">

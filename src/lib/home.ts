@@ -67,6 +67,8 @@ export async function updateHome(
     bathCount?: number | null;
     purchasePrice?: string | null;
     purchaseDate?: Date | null;
+    photoStorageKey?: string | null;
+    photoContentType?: string | null;
   },
 ) {
   const db = await getDb();
