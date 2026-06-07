@@ -16,8 +16,11 @@ import {
   listTemplatesFn,
   listItemsBySystemUnitFn,
   createItemFn,
+  updateItemFn,
+  deleteItemFn,
 } from "@/server/item";
 import { ItemFormModal } from "@/components/ItemFormModal";
+import { ItemDetailModal } from "@/components/ItemDetailModal";
 import { DropdownMenu } from "@/components/DropdownMenu";
 import { systems, systemUnits, itemTemplates, items } from "@/db/schema";
 import type { InferSelectModel } from "drizzle-orm";
@@ -81,6 +84,7 @@ function SystemsPage() {
   const [addUnitSystem, setAddUnitSystem] = useState<System | null>(null);
   const [editingUnit, setEditingUnit] = useState<SystemUnit | null>(null);
   const [addItemUnitId, setAddItemUnitId] = useState<string | null>(null);
+  const [viewingItem, setViewingItem] = useState<ItemWithTemplate | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -202,7 +206,52 @@ function SystemsPage() {
     }
   }
 
+  async function refreshUnitItems(systemUnitId: string) {
+    const updatedItems = await listItemsBySystemUnitFn({ data: { systemUnitId } });
+    setSystems((prev) =>
+      prev.map((s) => ({
+        ...s,
+        units: s.units.map((u) =>
+          u.id === systemUnitId ? { ...u, items: updatedItems as ItemWithTemplate[] } : u,
+        ),
+      })),
+    );
+  }
+
+  async function handleUpdateItem(data: { name: string; fields: Record<string, unknown> }) {
+    if (!viewingItem?.systemUnitId) return;
+    setPending(true);
+    try {
+      await updateItemFn({
+        data: { itemId: viewingItem.id, name: data.name, fields: data.fields },
+      });
+      await refreshUnitItems(viewingItem.systemUnitId);
+      setViewingItem(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to update item");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function handleDeleteItem() {
+    if (!viewingItem?.systemUnitId) return;
+    setPending(true);
+    try {
+      await deleteItemFn({ data: { itemId: viewingItem.id } });
+      await refreshUnitItems(viewingItem.systemUnitId);
+      setViewingItem(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to delete item");
+    } finally {
+      setPending(false);
+    }
+  }
+
   const addItemUnit = systems.flatMap((s) => s.units).find((u) => u.id === addItemUnitId);
+  const viewingItemUnit = systems
+    .flatMap((s) => s.units)
+    .find((u) => u.id === viewingItem?.systemUnitId);
 
   return (
     <main className="page-wrap px-4 pb-8 pt-6">
@@ -248,6 +297,7 @@ function SystemsPage() {
               onEditUnit={(unit) => setEditingUnit(unit)}
               onDeleteUnit={(unitId) => handleDeleteUnit(unitId, system.id)}
               onAddItem={(unitId) => setAddItemUnitId(unitId)}
+              onViewItem={(item) => setViewingItem(item)}
               pending={pending}
             />
           ))}
@@ -306,6 +356,17 @@ function SystemsPage() {
           pending={pending}
         />
       )}
+
+      {viewingItem && (
+        <ItemDetailModal
+          item={viewingItem}
+          locationLabel={viewingItemUnit?.name}
+          onSave={handleUpdateItem}
+          onDelete={handleDeleteItem}
+          onCancel={() => setViewingItem(null)}
+          pending={pending}
+        />
+      )}
     </main>
   );
 }
@@ -318,6 +379,7 @@ function SystemCard({
   onEditUnit,
   onDeleteUnit,
   onAddItem,
+  onViewItem,
   pending,
 }: {
   system: SystemWithUnits;
@@ -327,6 +389,7 @@ function SystemCard({
   onEditUnit: (unit: SystemUnitWithItems) => void;
   onDeleteUnit: (unitId: string) => void;
   onAddItem: (unitId: string) => void;
+  onViewItem: (item: ItemWithTemplate) => void;
   pending: boolean;
 }) {
   return (
@@ -371,9 +434,12 @@ function SystemCard({
               {unit.items.length > 0 && (
                 <div className="mt-2 space-y-1">
                   {unit.items.map((item) => (
-                    <div
+                    <button
                       key={item.id}
-                      className="flex items-center justify-between rounded bg-[var(--surface-strong)] px-2 py-1"
+                      type="button"
+                      onClick={() => onViewItem(item)}
+                      disabled={pending}
+                      className="flex w-full items-center justify-between rounded bg-[var(--surface-strong)] px-2 py-1 text-left transition hover:bg-[var(--lagoon-deep)]/10 disabled:opacity-50"
                     >
                       <span className="text-xs text-[var(--sea-ink)]">{item.name}</span>
                       {item.template && (
@@ -381,7 +447,7 @@ function SystemCard({
                           {item.template.category}
                         </span>
                       )}
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}

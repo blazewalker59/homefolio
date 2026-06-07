@@ -30,34 +30,22 @@ function AppLayout() {
   const { open, setOpen } = useSidebar();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  // Close the mobile drawer whenever the route changes.
+  // Close the popout whenever the route changes.
   useEffect(() => {
     setOpen(false);
   }, [pathname, setOpen]);
 
   return (
     <>
-      <div className="mx-auto flex w-full max-w-[1400px] lg:gap-6 lg:px-6">
-        {/* Main column — tabs + active section. */}
-        <div className="min-w-0 flex-1">
-          <SectionTabs />
-          {/* Bottom padding clears the fixed mobile tab bar. */}
-          <div className="pb-24 lg:pb-10">
-            <Outlet />
-          </div>
-        </div>
-
-        {/* Persistent config sidebar on wide screens. */}
-        <aside className="hidden shrink-0 lg:block lg:w-[300px]">
-          <div className="sticky top-20 py-8">
-            <ConfigSidebar home={home} totalInvested={totalInvested} idPrefix="cfg-desktop" />
-          </div>
-        </aside>
+      <SectionTabs />
+      {/* Bottom padding clears the fixed mobile tab bar (hidden at md+). */}
+      <div className="pb-24 md:pb-10">
+        <Outlet />
       </div>
 
-      {/* Mobile / PWA — slide-in drawer holding the same sidebar. */}
+      {/* Config sidebar — popout drawer from the header profile icon, all sizes. */}
       <div
-        className={`fixed inset-0 z-[60] lg:hidden ${open ? "" : "pointer-events-none"}`}
+        className={`fixed inset-0 z-[60] ${open ? "" : "pointer-events-none"}`}
         aria-hidden={!open}
       >
         <button

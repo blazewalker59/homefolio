@@ -41,12 +41,12 @@ export default function Header() {
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
           {status === "authenticated" &&
             isAppRoute && (
-              // Opens the config drawer on mobile; the persistent sidebar covers lg+.
+              // Opens the config popout drawer at every breakpoint.
               <button
                 type="button"
                 onClick={() => setOpen(true)}
                 aria-label="Account & settings"
-                className="grid h-9 w-9 place-items-center overflow-hidden rounded-full border border-[var(--line)] bg-[var(--surface-strong)] text-sm font-bold text-[var(--lagoon-deep)] transition hover:border-[var(--lagoon-deep)] lg:hidden"
+                className="grid h-9 w-9 place-items-center overflow-hidden rounded-full border border-[var(--line)] bg-[var(--surface-strong)] text-sm font-bold text-[var(--lagoon-deep)] transition hover:border-[var(--lagoon-deep)]"
               >
                 {avatar ? (
                   <img src={avatar} alt="" className="h-full w-full object-cover" />

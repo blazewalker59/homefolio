@@ -2,9 +2,17 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { getHomeFn } from "@/server/home";
 import { listRoomsFn, createRoomFn, updateRoomFn, deleteRoomFn } from "@/server/room";
-import { seedTemplatesFn, listTemplatesFn, listItemsByRoomFn, createItemFn } from "@/server/item";
+import {
+  seedTemplatesFn,
+  listTemplatesFn,
+  listItemsByRoomFn,
+  createItemFn,
+  updateItemFn,
+  deleteItemFn,
+} from "@/server/item";
 import { ROOM_CATEGORIES, getRoomCategory } from "@/lib/room-categories";
 import { ItemFormModal } from "@/components/ItemFormModal";
+import { ItemDetailModal } from "@/components/ItemDetailModal";
 import { DropdownMenu } from "@/components/DropdownMenu";
 import { rooms, itemTemplates, items } from "@/db/schema";
 import type { InferSelectModel } from "drizzle-orm";
@@ -55,6 +63,7 @@ function RoomsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [addItemRoomId, setAddItemRoomId] = useState<string | null>(null);
+  const [viewingItem, setViewingItem] = useState<ItemWithTemplate | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -122,7 +131,45 @@ function RoomsPage() {
     }
   }
 
+  async function refreshRoomItems(roomId: string) {
+    const updatedItems = await listItemsByRoomFn({ data: { roomId } });
+    setRooms((prev) =>
+      prev.map((r) => (r.id === roomId ? { ...r, items: updatedItems as ItemWithTemplate[] } : r)),
+    );
+  }
+
+  async function handleUpdateItem(data: { name: string; fields: Record<string, unknown> }) {
+    if (!viewingItem?.roomId) return;
+    setPending(true);
+    try {
+      await updateItemFn({
+        data: { itemId: viewingItem.id, name: data.name, fields: data.fields },
+      });
+      await refreshRoomItems(viewingItem.roomId);
+      setViewingItem(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to update item");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function handleDeleteItem() {
+    if (!viewingItem?.roomId) return;
+    setPending(true);
+    try {
+      await deleteItemFn({ data: { itemId: viewingItem.id } });
+      await refreshRoomItems(viewingItem.roomId);
+      setViewingItem(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to delete item");
+    } finally {
+      setPending(false);
+    }
+  }
+
   const addItemRoom = rooms.find((r) => r.id === addItemRoomId);
+  const viewingItemRoom = rooms.find((r) => r.id === viewingItem?.roomId);
 
   return (
     <main className="page-wrap px-4 pb-8 pt-6">
@@ -163,6 +210,7 @@ function RoomsPage() {
               onEdit={() => setEditingRoom(room)}
               onDelete={() => handleDelete(room.id)}
               onAddItem={() => setAddItemRoomId(room.id)}
+              onViewItem={(item) => setViewingItem(item)}
               pending={pending}
             />
           ))}
@@ -199,6 +247,17 @@ function RoomsPage() {
           pending={pending}
         />
       )}
+
+      {viewingItem && (
+        <ItemDetailModal
+          item={viewingItem}
+          locationLabel={viewingItemRoom?.name}
+          onSave={handleUpdateItem}
+          onDelete={handleDeleteItem}
+          onCancel={() => setViewingItem(null)}
+          pending={pending}
+        />
+      )}
     </main>
   );
 }
@@ -208,12 +267,14 @@ function RoomCard({
   onEdit,
   onDelete,
   onAddItem,
+  onViewItem,
   pending,
 }: {
   room: RoomWithItems;
   onEdit: () => void;
   onDelete: () => void;
   onAddItem: () => void;
+  onViewItem: (item: ItemWithTemplate) => void;
   pending: boolean;
 }) {
   const category = getRoomCategory(room.category);
@@ -249,15 +310,18 @@ function RoomCard({
             {room.items.length} {room.items.length === 1 ? "item" : "items"}
           </p>
           {room.items.map((item) => (
-            <div
+            <button
               key={item.id}
-              className="flex items-center justify-between rounded-lg bg-[var(--link-bg-hover)] px-3 py-1.5"
+              type="button"
+              onClick={() => onViewItem(item)}
+              disabled={pending}
+              className="flex w-full items-center justify-between rounded-lg bg-[var(--link-bg-hover)] px-3 py-1.5 text-left transition hover:bg-[var(--lagoon-deep)]/10 disabled:opacity-50"
             >
               <span className="text-sm text-[var(--sea-ink)]">{item.name}</span>
               {item.template && (
                 <span className="text-xs text-[var(--sea-ink-soft)]">{item.template.category}</span>
               )}
-            </div>
+            </button>
           ))}
         </div>
       )}
