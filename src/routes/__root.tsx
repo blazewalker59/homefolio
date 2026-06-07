@@ -21,7 +21,7 @@ export const Route = createRootRoute({
       },
       {
         name: "theme-color",
-        content: "#8a611e",
+        content: "#2c5e42",
       },
       {
         title: "Homefolio",

@@ -9,61 +9,62 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Homefolio — Editorial Real-Estate palette
-   A design-magazine for your house: warm bone paper, deep ink, brushed-brass
+   Homefolio — Forest & Cream palette
+   A home-y field journal: soft off-white cream paper, deep forest-green
    accents, hairline rules, and high-contrast Playfair Display headings. Light
-   is canonical; dark is a midnight-foyer alternate. The CSS variable names
-   are kept stable from the previous theme so every existing callsite inherits
-   the new look without markup changes — only the *values* moved.
+   is canonical; dark is a forest-night alternate. The CSS variable names are
+   kept stable from the previous theme so every existing callsite inherits the
+   new look without markup changes — only the *values* moved. (Names like
+   --lagoon / --sand are historical — read them as the accent / panel tokens.)
    --------------------------------------------------------------------------- */
 
-/* Light (canonical) — warm bone paper -------------------------------------- */
+/* Light (canonical) — off-white cream paper -------------------------------- */
 :root {
   /* text */
-  --sea-ink: #1a1814; /* warm ink, primary text */
-  --sea-ink-soft: #6f665a; /* warm graphite */
+  --sea-ink: #1b211c; /* deep forest charcoal, primary text */
+  --sea-ink-soft: #5c6a5f; /* sage graphite */
 
-  /* accents (brass family) */
-  --lagoon: #b8893a; /* brushed brass, primary accent */
-  --lagoon-deep: #8a611e; /* deep brass, pressed/active */
-  --palm: #8a611e; /* eyebrow brass — same as lagoon-deep */
+  /* accents (forest green family) */
+  --lagoon: #3f8059; /* forest green, primary accent */
+  --lagoon-deep: #2c5e42; /* deep forest, pressed/active */
+  --palm: #2c5e42; /* eyebrow green — same as lagoon-deep */
 
   /* surface tones */
-  --sand: #efe7d6; /* warm cream panel */
-  --foam: #f7f1e3; /* lighter cream */
-  --bg-base: #f3ebd9; /* bone paper, page ground */
+  --sand: #ece9dd; /* warm panel */
+  --foam: #fbfaf4; /* lighter cream */
+  --bg-base: #f5f3ea; /* off-white cream, page ground */
 
-  --surface: rgba(252, 247, 235, 0.82);
-  --surface-strong: rgba(252, 247, 235, 0.96);
-  --line: rgba(26, 24, 20, 0.16);
-  --inset-glint: rgba(255, 252, 244, 0.86);
+  --surface: rgba(253, 252, 248, 0.85);
+  --surface-strong: rgba(253, 252, 248, 0.97);
+  --line: rgba(27, 33, 28, 0.14);
+  --inset-glint: rgba(255, 255, 255, 0.85);
 
   --kicker: var(--palm);
-  --header-bg: rgba(247, 241, 227, 0.88);
-  --chip-bg: rgba(252, 247, 235, 0.84);
-  --chip-line: rgba(138, 97, 30, 0.28);
-  --link-bg-hover: rgba(232, 222, 200, 0.7);
+  --header-bg: rgba(251, 250, 244, 0.88);
+  --chip-bg: rgba(253, 252, 248, 0.85);
+  --chip-line: rgba(44, 94, 66, 0.26);
+  --link-bg-hover: rgba(214, 224, 210, 0.6);
 
-  --hero-a: rgba(184, 137, 58, 0.14);
-  --hero-b: rgba(26, 24, 20, 0.06);
-  --hero-c: rgba(184, 137, 58, 0.08);
+  --hero-a: rgba(63, 128, 89, 0.12);
+  --hero-b: rgba(27, 33, 28, 0.05);
+  --hero-c: rgba(63, 128, 89, 0.07);
 
   /* interactive primitives */
-  --on-accent: #fcf7eb; /* cream text on a brass-filled surface */
+  --on-accent: #f6f9f3; /* near-white text on a green-filled surface */
   --btn-primary-bg: var(--lagoon-deep);
-  --btn-primary-bg-hover: #6e4d18;
+  --btn-primary-bg-hover: #224b34;
   --btn-primary-text: var(--on-accent);
-  --btn-secondary-bg: rgba(252, 247, 235, 0.74);
-  --btn-secondary-bg-hover: rgba(252, 247, 235, 0.96);
+  --btn-secondary-bg: rgba(253, 252, 248, 0.76);
+  --btn-secondary-bg-hover: rgba(253, 252, 248, 0.97);
   --btn-secondary-text: var(--sea-ink);
   --btn-secondary-border: var(--line);
 
-  --input-bg: rgba(252, 247, 235, 0.86);
+  --input-bg: rgba(253, 252, 248, 0.88);
   --input-border: var(--line);
   --input-border-focus: var(--lagoon-deep);
-  --focus-ring: rgba(184, 137, 58, 0.28);
+  --focus-ring: rgba(63, 128, 89, 0.28);
 
-  --selection-bg: rgba(184, 137, 58, 0.32);
+  --selection-bg: rgba(63, 128, 89, 0.26);
 
   /* danger (light) */
   --danger-bg: rgba(180, 60, 40, 0.08);
@@ -72,49 +73,49 @@
   --danger-bg-hover: rgba(180, 60, 40, 0.14);
 }
 
-/* Dark (midnight foyer alternate) ----------------------------------------- */
+/* Dark (forest night alternate) ------------------------------------------- */
 :root[data-theme="dark"] {
-  --sea-ink: #ece4d2;
-  --sea-ink-soft: #a39a87;
+  --sea-ink: #e7ece1;
+  --sea-ink-soft: #98a594;
 
-  --lagoon: #d4a558;
-  --lagoon-deep: #c79444;
-  --palm: #d4a558;
+  --lagoon: #5fb185;
+  --lagoon-deep: #54a679;
+  --palm: #5fb185;
 
-  --sand: #221d15;
-  --foam: #1c1812;
-  --bg-base: #14110b;
+  --sand: #1a221b;
+  --foam: #141a15;
+  --bg-base: #0f140f;
 
-  --surface: rgba(28, 24, 18, 0.82);
-  --surface-strong: rgba(34, 29, 21, 0.94);
-  --line: rgba(236, 228, 210, 0.16);
-  --inset-glint: rgba(236, 228, 210, 0.06);
+  --surface: rgba(22, 29, 23, 0.82);
+  --surface-strong: rgba(28, 36, 29, 0.94);
+  --line: rgba(231, 236, 225, 0.15);
+  --inset-glint: rgba(231, 236, 225, 0.05);
 
   --kicker: var(--palm);
-  --header-bg: rgba(20, 17, 11, 0.86);
-  --chip-bg: rgba(34, 29, 21, 0.78);
-  --chip-line: rgba(212, 165, 88, 0.32);
-  --link-bg-hover: rgba(40, 34, 24, 0.84);
+  --header-bg: rgba(14, 19, 14, 0.86);
+  --chip-bg: rgba(28, 36, 29, 0.78);
+  --chip-line: rgba(95, 177, 133, 0.32);
+  --link-bg-hover: rgba(38, 48, 39, 0.84);
 
-  --hero-a: rgba(212, 165, 88, 0.14);
-  --hero-b: rgba(236, 228, 210, 0.04);
-  --hero-c: rgba(212, 165, 88, 0.08);
+  --hero-a: rgba(95, 177, 133, 0.14);
+  --hero-b: rgba(231, 236, 225, 0.04);
+  --hero-c: rgba(95, 177, 133, 0.08);
 
-  --on-accent: #14110b;
+  --on-accent: #0f140f;
   --btn-primary-bg: var(--lagoon);
-  --btn-primary-bg-hover: #e2b76d;
+  --btn-primary-bg-hover: #6fc295;
   --btn-primary-text: var(--on-accent);
-  --btn-secondary-bg: rgba(34, 29, 21, 0.7);
-  --btn-secondary-bg-hover: rgba(46, 38, 26, 0.92);
+  --btn-secondary-bg: rgba(28, 36, 29, 0.7);
+  --btn-secondary-bg-hover: rgba(38, 48, 39, 0.92);
   --btn-secondary-text: var(--sea-ink);
   --btn-secondary-border: var(--line);
 
-  --input-bg: rgba(20, 17, 11, 0.6);
+  --input-bg: rgba(14, 19, 14, 0.6);
   --input-border: var(--line);
   --input-border-focus: var(--lagoon);
-  --focus-ring: rgba(212, 165, 88, 0.32);
+  --focus-ring: rgba(95, 177, 133, 0.32);
 
-  --selection-bg: rgba(212, 165, 88, 0.28);
+  --selection-bg: rgba(95, 177, 133, 0.28);
 
   /* danger (dark) */
   --danger-bg: rgba(220, 110, 90, 0.14);
@@ -128,47 +129,47 @@
    OS is dark and the user hasn't pinned a mode. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --sea-ink: #ece4d2;
-    --sea-ink-soft: #a39a87;
+    --sea-ink: #e7ece1;
+    --sea-ink-soft: #98a594;
 
-    --lagoon: #d4a558;
-    --lagoon-deep: #c79444;
-    --palm: #d4a558;
+    --lagoon: #5fb185;
+    --lagoon-deep: #54a679;
+    --palm: #5fb185;
 
-    --sand: #221d15;
-    --foam: #1c1812;
-    --bg-base: #14110b;
+    --sand: #1a221b;
+    --foam: #141a15;
+    --bg-base: #0f140f;
 
-    --surface: rgba(28, 24, 18, 0.82);
-    --surface-strong: rgba(34, 29, 21, 0.94);
-    --line: rgba(236, 228, 210, 0.16);
-    --inset-glint: rgba(236, 228, 210, 0.06);
+    --surface: rgba(22, 29, 23, 0.82);
+    --surface-strong: rgba(28, 36, 29, 0.94);
+    --line: rgba(231, 236, 225, 0.15);
+    --inset-glint: rgba(231, 236, 225, 0.05);
 
     --kicker: var(--palm);
-    --header-bg: rgba(20, 17, 11, 0.86);
-    --chip-bg: rgba(34, 29, 21, 0.78);
-    --chip-line: rgba(212, 165, 88, 0.32);
-    --link-bg-hover: rgba(40, 34, 24, 0.84);
+    --header-bg: rgba(14, 19, 14, 0.86);
+    --chip-bg: rgba(28, 36, 29, 0.78);
+    --chip-line: rgba(95, 177, 133, 0.32);
+    --link-bg-hover: rgba(38, 48, 39, 0.84);
 
-    --hero-a: rgba(212, 165, 88, 0.14);
-    --hero-b: rgba(236, 228, 210, 0.04);
-    --hero-c: rgba(212, 165, 88, 0.08);
+    --hero-a: rgba(95, 177, 133, 0.14);
+    --hero-b: rgba(231, 236, 225, 0.04);
+    --hero-c: rgba(95, 177, 133, 0.08);
 
-    --on-accent: #14110b;
+    --on-accent: #0f140f;
     --btn-primary-bg: var(--lagoon);
-    --btn-primary-bg-hover: #e2b76d;
+    --btn-primary-bg-hover: #6fc295;
     --btn-primary-text: var(--on-accent);
-    --btn-secondary-bg: rgba(34, 29, 21, 0.7);
-    --btn-secondary-bg-hover: rgba(46, 38, 26, 0.92);
+    --btn-secondary-bg: rgba(28, 36, 29, 0.7);
+    --btn-secondary-bg-hover: rgba(38, 48, 39, 0.92);
     --btn-secondary-text: var(--sea-ink);
     --btn-secondary-border: var(--line);
 
-    --input-bg: rgba(20, 17, 11, 0.6);
+    --input-bg: rgba(14, 19, 14, 0.6);
     --input-border: var(--line);
     --input-border-focus: var(--lagoon);
-    --focus-ring: rgba(212, 165, 88, 0.32);
+    --focus-ring: rgba(95, 177, 133, 0.32);
 
-    --selection-bg: rgba(212, 165, 88, 0.28);
+    --selection-bg: rgba(95, 177, 133, 0.28);
 
     --danger-bg: rgba(220, 110, 90, 0.14);
     --danger-border: rgba(220, 110, 90, 0.38);
@@ -298,8 +299,8 @@ pre code {
   background: var(--surface-strong);
   box-shadow:
     0 1px 0 var(--inset-glint) inset,
-    0 1px 2px rgba(26, 24, 20, 0.04),
-    0 12px 28px -18px rgba(26, 24, 20, 0.18);
+    0 1px 2px rgba(20, 28, 21, 0.04),
+    0 12px 28px -18px rgba(20, 28, 21, 0.18);
   backdrop-filter: blur(2px);
 }
 
@@ -333,7 +334,7 @@ pre code {
   border-color: color-mix(in oklab, var(--lagoon) 36%, var(--line));
   box-shadow:
     0 1px 0 var(--inset-glint) inset,
-    0 18px 36px -20px rgba(26, 24, 20, 0.32);
+    0 18px 36px -20px rgba(20, 28, 21, 0.32);
 }
 
 .feature-card:hover::before {
