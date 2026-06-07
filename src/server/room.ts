@@ -15,6 +15,7 @@ import { z } from "zod";
 import { getHome } from "@/lib/home";
 import { createRoom, listRooms, updateRoom, deleteRoom, getRoom } from "@/lib/room";
 import { seedBuiltInTemplates, listTemplates, listItems } from "@/lib/item";
+import { listDocumentsByHome } from "@/lib/document";
 import { BUILT_IN_TEMPLATES } from "@/lib/item-templates";
 import { requireSessionUser } from "@/lib/auth/session";
 import { ROOM_CATEGORIES } from "@/lib/room-categories";
@@ -31,10 +32,11 @@ export const getRoomsPageFn = createServerFn({ method: "GET" }).handler(async ()
   if (!home) return { rooms: [], templates: [] };
 
   await seedBuiltInTemplates(BUILT_IN_TEMPLATES);
-  const [roomsList, allItemsRaw, templates] = await Promise.all([
+  const [roomsList, allItemsRaw, templates, allDocs] = await Promise.all([
     listRooms(home.id),
     listItems(home.id),
     listTemplates(home.id),
+    listDocumentsByHome(home.id),
   ]);
   // `fields` is jsonb (Record<string, unknown>); narrow to the serializable
   // shape TanStack Start requires for server-function return values.
@@ -50,7 +52,19 @@ export const getRoomsPageFn = createServerFn({ method: "GET" }).handler(async ()
     else itemsByRoom.set(item.roomId, [item]);
   }
 
-  const rooms = roomsList.map((room) => ({ ...room, items: itemsByRoom.get(room.id) ?? [] }));
+  const docsByRoom = new Map<string, typeof allDocs>();
+  for (const doc of allDocs) {
+    if (doc.entityType !== "room") continue;
+    const bucket = docsByRoom.get(doc.entityId);
+    if (bucket) bucket.push(doc);
+    else docsByRoom.set(doc.entityId, [doc]);
+  }
+
+  const rooms = roomsList.map((room) => ({
+    ...room,
+    items: itemsByRoom.get(room.id) ?? [],
+    documents: docsByRoom.get(room.id) ?? [],
+  }));
   return { rooms, templates };
 });
 

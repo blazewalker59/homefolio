@@ -5,18 +5,21 @@ import { listItemsByRoomFn, createItemFn, updateItemFn, deleteItemFn } from "@/s
 import { ROOM_CATEGORIES, getRoomCategory } from "@/lib/room-categories";
 import { ItemFormModal } from "@/components/ItemFormModal";
 import { ItemDetailModal } from "@/components/ItemDetailModal";
+import { DocumentsSection } from "@/components/DocumentsSection";
 import { DropdownMenu } from "@/components/DropdownMenu";
-import { rooms, itemTemplates, items } from "@/db/schema";
+import { rooms, itemTemplates, items, documents } from "@/db/schema";
 import type { InferSelectModel } from "drizzle-orm";
 
 type Room = InferSelectModel<typeof rooms>;
 type Template = InferSelectModel<typeof itemTemplates>;
+type Document = InferSelectModel<typeof documents>;
 type ItemWithTemplate = InferSelectModel<typeof items> & {
   template?: Template;
 };
 
 interface RoomWithItems extends Room {
   items: ItemWithTemplate[];
+  documents: Document[];
 }
 
 export const Route = createFileRoute("/_app/rooms")({
@@ -48,7 +51,7 @@ function RoomsPage() {
     setPending(true);
     try {
       const newRoom = await createRoomFn({ data });
-      setRooms((prev) => [...prev, { ...newRoom, items: [] }]);
+      setRooms((prev) => [...prev, { ...newRoom, items: [], documents: [] }]);
       setShowCreate(false);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to create room");
@@ -302,6 +305,8 @@ function RoomCard({
           ))}
         </div>
       )}
+
+      <DocumentsSection documents={room.documents} />
 
       <button
         onClick={onAddItem}

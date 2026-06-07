@@ -12,13 +12,15 @@ import {
 import { listItemsBySystemUnitFn, createItemFn, updateItemFn, deleteItemFn } from "@/server/item";
 import { ItemFormModal } from "@/components/ItemFormModal";
 import { ItemDetailModal } from "@/components/ItemDetailModal";
+import { DocumentsSection } from "@/components/DocumentsSection";
 import { DropdownMenu } from "@/components/DropdownMenu";
-import { systems, systemUnits, itemTemplates, items } from "@/db/schema";
+import { systems, systemUnits, itemTemplates, items, documents } from "@/db/schema";
 import type { InferSelectModel } from "drizzle-orm";
 
 type System = InferSelectModel<typeof systems>;
 type SystemUnit = InferSelectModel<typeof systemUnits>;
 type Template = InferSelectModel<typeof itemTemplates>;
+type Document = InferSelectModel<typeof documents>;
 type ItemWithTemplate = InferSelectModel<typeof items> & {
   template?: Template;
 };
@@ -29,6 +31,7 @@ interface SystemUnitWithItems extends SystemUnit {
 
 interface SystemWithUnits extends System {
   units: SystemUnitWithItems[];
+  documents: Document[];
 }
 
 export const Route = createFileRoute("/_app/systems")({
@@ -62,7 +65,7 @@ function SystemsPage() {
     setPending(true);
     try {
       const newSystem = await createSystemFn({ data });
-      setSystems((prev) => [...prev, { ...newSystem, units: [] }]);
+      setSystems((prev) => [...prev, { ...newSystem, units: [], documents: [] }]);
       setShowCreate(false);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to create system");
@@ -433,6 +436,8 @@ function SystemCard({
           ))}
         </div>
       )}
+
+      <DocumentsSection documents={system.documents} />
 
       <button
         onClick={onAddUnit}

@@ -26,6 +26,7 @@ import {
   deleteSystemUnit,
 } from "@/lib/system";
 import { seedBuiltInTemplates, listTemplates, listItems } from "@/lib/item";
+import { listDocumentsByHome } from "@/lib/document";
 import { BUILT_IN_TEMPLATES } from "@/lib/item-templates";
 import { requireSessionUser } from "@/lib/auth/session";
 
@@ -41,10 +42,11 @@ export const getSystemsPageFn = createServerFn({ method: "GET" }).handler(async 
   if (!home) return { systems: [], templates: [] };
 
   await seedBuiltInTemplates(BUILT_IN_TEMPLATES);
-  const [systemsList, allItemsRaw, templates] = await Promise.all([
+  const [systemsList, allItemsRaw, templates, allDocs] = await Promise.all([
     listSystems(home.id),
     listItems(home.id),
     listTemplates(home.id),
+    listDocumentsByHome(home.id),
   ]);
   // `fields` is jsonb (Record<string, unknown>); narrow to the serializable
   // shape TanStack Start requires for server-function return values.
@@ -62,9 +64,18 @@ export const getSystemsPageFn = createServerFn({ method: "GET" }).handler(async 
     else itemsByUnit.set(item.systemUnitId, [item]);
   }
 
+  const docsBySystem = new Map<string, typeof allDocs>();
+  for (const doc of allDocs) {
+    if (doc.entityType !== "system") continue;
+    const bucket = docsBySystem.get(doc.entityId);
+    if (bucket) bucket.push(doc);
+    else docsBySystem.set(doc.entityId, [doc]);
+  }
+
   const systems = systemsList.map((system, i) => ({
     ...system,
     units: unitsBySystem[i].map((unit) => ({ ...unit, items: itemsByUnit.get(unit.id) ?? [] })),
+    documents: docsBySystem.get(system.id) ?? [],
   }));
 
   return { systems, templates };
