@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { uploadDocumentFn } from "@/server/document";
+import { toViewableImage } from "@/lib/heic";
 import type { DocumentType, DocumentEntityType } from "@/lib/storage/types";
 
 interface DocumentUploadProps {
@@ -33,7 +34,8 @@ export function DocumentUpload({ entityType, entityId, onUploadComplete }: Docum
     setError(null);
 
     try {
-      const arrayBuffer = await file.arrayBuffer();
+      const uploadFile = await toViewableImage(file);
+      const arrayBuffer = await uploadFile.arrayBuffer();
       const base64 = btoa(
         new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), ""),
       );
@@ -43,8 +45,8 @@ export function DocumentUpload({ entityType, entityId, onUploadComplete }: Docum
           entityType,
           entityId,
           type,
-          filename: file.name,
-          mimeType: file.type,
+          filename: uploadFile.name,
+          mimeType: uploadFile.type,
           fileContent: base64,
           notes: notes || undefined,
           amount: type === "receipt" && amount ? amount : undefined,

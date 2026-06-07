@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ImagePlus, Camera, X } from "lucide-react";
 import { uploadHomePhotoFn, removeHomePhotoFn } from "@/server/home";
+import { toViewableImage } from "@/lib/heic";
 import type { InferSelectModel } from "drizzle-orm";
 import type { homes } from "@/db/schema";
 
@@ -37,12 +38,13 @@ export function HomeHero({ home }: { home: Home }) {
     : null;
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+    const selected = e.target.files?.[0];
     e.target.value = ""; // allow re-selecting the same file later
-    if (!file) return;
+    if (!selected) return;
 
     setPending(true);
     try {
+      const file = await toViewableImage(selected);
       const fileContent = await fileToBase64(file);
       await uploadHomePhotoFn({
         data: { fileContent, mimeType: file.type || "image/jpeg", filename: file.name },
