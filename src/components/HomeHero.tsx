@@ -9,6 +9,9 @@ type Home = InferSelectModel<typeof homes>;
 
 // Distance (px) over which the hero fades out as the page scrolls down.
 const FADE_DISTANCE = 260;
+// How much slower the image moves than the scroll (0 = pinned, 1 = no parallax).
+// Matches the image's vertical overscan (see PARALLAX_OVERSCAN) so no gap shows.
+const PARALLAX_FACTOR = 0.3;
 
 async function fileToBase64(file: File): Promise<string> {
   const buffer = await file.arrayBuffer();
@@ -20,18 +23,29 @@ async function fileToBase64(file: File): Promise<string> {
 
 export function HomeHero({ home }: { home: Home }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const [opacity, setOpacity] = useState(1);
+  const [scrollY, setScrollY] = useState(0);
   const [pending, setPending] = useState(false);
 
-  // Fade the hero into transparency as the user scrolls down.
+  // Track scroll (rAF-throttled) to drive both the fade and the parallax.
   useEffect(() => {
+    let raf = 0;
     const onScroll = () => {
-      setOpacity(Math.max(0, Math.min(1, 1 - window.scrollY / FADE_DISTANCE)));
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        setScrollY(window.scrollY);
+      });
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, []);
+
+  const opacity = Math.max(0, Math.min(1, 1 - scrollY / FADE_DISTANCE));
+  const parallax = scrollY * PARALLAX_FACTOR;
 
   const photoUrl = home.photoStorageKey
     ? `/api/documents/${encodeURIComponent(home.photoStorageKey)}?v=${new Date(home.updatedAt).getTime()}`
@@ -92,10 +106,13 @@ export function HomeHero({ home }: { home: Home }) {
 
       {photoUrl ? (
         <>
+          {/* Image is taller than the frame (overscan) and shifts slower than
+              the scroll for a parallax effect; overscan hides the offset. */}
           <img
             src={photoUrl}
             alt="Your home"
-            className="h-full w-full object-cover"
+            className="absolute inset-x-0 -top-[30%] h-[160%] w-full object-cover will-change-transform"
+            style={{ transform: `translate3d(0, ${parallax}px, 0)` }}
             decoding="async"
             fetchPriority="high"
           />
