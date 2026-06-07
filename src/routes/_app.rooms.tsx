@@ -1,15 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
-import { getHomeFn } from "@/server/home";
-import { listRoomsFn, createRoomFn, updateRoomFn, deleteRoomFn } from "@/server/room";
-import {
-  seedTemplatesFn,
-  listTemplatesFn,
-  listItemsByRoomFn,
-  createItemFn,
-  updateItemFn,
-  deleteItemFn,
-} from "@/server/item";
+import { createRoomFn, updateRoomFn, deleteRoomFn, getRoomsPageFn } from "@/server/room";
+import { listItemsByRoomFn, createItemFn, updateItemFn, deleteItemFn } from "@/server/item";
 import { ROOM_CATEGORIES, getRoomCategory } from "@/lib/room-categories";
 import { ItemFormModal } from "@/components/ItemFormModal";
 import { ItemDetailModal } from "@/components/ItemDetailModal";
@@ -30,23 +22,8 @@ interface RoomWithItems extends Room {
 export const Route = createFileRoute("/_app/rooms")({
   loader: async () => {
     try {
-      const home = await getHomeFn();
-      if (!home?.address) {
-        throw redirect({ to: "/setup" });
-      }
-      const roomsList = await listRoomsFn();
-
-      await seedTemplatesFn();
-      const templates = await listTemplatesFn();
-
-      const roomsWithItems: RoomWithItems[] = await Promise.all(
-        roomsList.map(async (room) => {
-          const roomItems = await listItemsByRoomFn({ data: { roomId: room.id } });
-          return { ...room, items: roomItems as ItemWithTemplate[] };
-        }),
-      );
-
-      return { home, rooms: roomsWithItems, templates };
+      const { rooms, templates } = await getRoomsPageFn();
+      return { rooms: rooms as RoomWithItems[], templates };
     } catch (err) {
       if (err instanceof Error && err.message === "Not authenticated") {
         throw redirect({ to: "/sign-in" });

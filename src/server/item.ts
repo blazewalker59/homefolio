@@ -30,6 +30,8 @@ import {
   moveItem,
   deleteItem,
 } from "@/lib/item";
+import { listRooms } from "@/lib/room";
+import { listSystems, listSystemUnits } from "@/lib/system";
 import { requireSessionUser } from "@/lib/auth/session";
 import { BUILT_IN_TEMPLATES } from "@/lib/item-templates";
 import type { TemplateField } from "@/db/schema";
@@ -161,6 +163,35 @@ export const deleteCustomTemplateFn = createServerFn({ method: "POST" })
     await deleteCustomTemplate(data.templateId);
     return { success: true };
   });
+
+/**
+ * All data the Items page needs, in a single round trip: templates, every
+ * item (with relations), the room list, and the flat system-unit list.
+ * Replaces the loader's parallel fetch + per-system unit waterfall.
+ */
+export const getItemsPageFn = createServerFn({ method: "GET" }).handler(async () => {
+  const user = await requireSessionUser();
+  const home = await getHome(user.id);
+  if (!home) return { templates: [], items: [], rooms: [], systemUnits: [] };
+
+  await seedBuiltInTemplates(BUILT_IN_TEMPLATES);
+  const [templates, allItems, roomsList, systemsList] = await Promise.all([
+    listTemplates(home.id),
+    listItems(home.id),
+    listRooms(home.id),
+    listSystems(home.id),
+  ]);
+
+  const unitsBySystem = await Promise.all(systemsList.map((s) => listSystemUnits(s.id)));
+  const systemUnits = unitsBySystem.flat();
+
+  return {
+    templates,
+    items: allItems as Array<(typeof allItems)[number] & { fields: SerializableFields }>,
+    rooms: roomsList,
+    systemUnits,
+  };
+});
 
 /**
  * List all items for the current user's home.

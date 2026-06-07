@@ -1,24 +1,15 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
-import { getHomeFn } from "@/server/home";
 import {
-  listSystemsFn,
   createSystemFn,
   updateSystemFn,
   deleteSystemFn,
   createSystemUnitFn,
   updateSystemUnitFn,
   deleteSystemUnitFn,
-  listSystemUnitsFn,
+  getSystemsPageFn,
 } from "@/server/system";
-import {
-  seedTemplatesFn,
-  listTemplatesFn,
-  listItemsBySystemUnitFn,
-  createItemFn,
-  updateItemFn,
-  deleteItemFn,
-} from "@/server/item";
+import { listItemsBySystemUnitFn, createItemFn, updateItemFn, deleteItemFn } from "@/server/item";
 import { ItemFormModal } from "@/components/ItemFormModal";
 import { ItemDetailModal } from "@/components/ItemDetailModal";
 import { DropdownMenu } from "@/components/DropdownMenu";
@@ -43,29 +34,8 @@ interface SystemWithUnits extends System {
 export const Route = createFileRoute("/_app/systems")({
   loader: async () => {
     try {
-      const home = await getHomeFn();
-      if (!home?.address) {
-        throw redirect({ to: "/setup" });
-      }
-      const systemsList = await listSystemsFn();
-
-      await seedTemplatesFn();
-      const templates = await listTemplatesFn();
-
-      const systemsWithUnits: SystemWithUnits[] = await Promise.all(
-        systemsList.map(async (system) => {
-          const units = await listSystemUnitsFn({ data: { systemId: system.id } });
-          const unitsWithItems: SystemUnitWithItems[] = await Promise.all(
-            units.map(async (unit) => {
-              const unitItems = await listItemsBySystemUnitFn({ data: { systemUnitId: unit.id } });
-              return { ...unit, items: unitItems as ItemWithTemplate[] };
-            }),
-          );
-          return { ...system, units: unitsWithItems };
-        }),
-      );
-
-      return { home, systems: systemsWithUnits, templates };
+      const { systems, templates } = await getSystemsPageFn();
+      return { systems: systems as SystemWithUnits[], templates };
     } catch (err) {
       if (err instanceof Error && err.message === "Not authenticated") {
         throw redirect({ to: "/sign-in" });

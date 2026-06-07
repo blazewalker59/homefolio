@@ -1,17 +1,13 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useState } from "react";
-import { getHomeFn } from "@/server/home";
 import {
-  seedTemplatesFn,
-  listTemplatesFn,
   listItemsFn,
   createItemFn,
   updateItemFn,
   moveItemFn,
   deleteItemFn,
+  getItemsPageFn,
 } from "@/server/item";
-import { listRoomsFn } from "@/server/room";
-import { listSystemsFn, listSystemUnitsFn } from "@/server/system";
 import { DropdownMenu } from "@/components/DropdownMenu";
 import type { itemTemplates, items, rooms, systemUnits } from "@/db/schema";
 import type { InferSelectModel } from "drizzle-orm";
@@ -28,35 +24,8 @@ type SystemUnit = InferSelectModel<typeof systemUnits>;
 export const Route = createFileRoute("/_app/items")({
   loader: async () => {
     try {
-      const home = await getHomeFn();
-      if (!home?.address) {
-        throw redirect({ to: "/setup" });
-      }
-
-      // Seed templates if needed.
-      await seedTemplatesFn();
-
-      const [templates, allItems, roomsList, systemsList] = await Promise.all([
-        listTemplatesFn(),
-        listItemsFn(),
-        listRoomsFn(),
-        listSystemsFn(),
-      ]);
-
-      // Fetch system units for each system.
-      const allUnits: SystemUnit[] = [];
-      for (const system of systemsList) {
-        const units = await listSystemUnitsFn({ data: { systemId: system.id } });
-        allUnits.push(...units);
-      }
-
-      return {
-        home,
-        templates,
-        items: allItems as Item[],
-        rooms: roomsList,
-        systemUnits: allUnits,
-      };
+      const { templates, items, rooms, systemUnits } = await getItemsPageFn();
+      return { templates, items: items as Item[], rooms, systemUnits };
     } catch (err) {
       if (err instanceof Error && err.message === "Not authenticated") {
         throw redirect({ to: "/sign-in" });

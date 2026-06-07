@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { X } from "lucide-react";
-import { getHomeFn, getTotalInvestedFn } from "@/server/home";
+import { getHomeOverviewFn } from "@/server/home";
 import ConfigSidebar from "@/components/ConfigSidebar";
 import SectionTabs from "@/components/SectionTabs";
 import { useSidebar } from "@/lib/sidebar-context";
@@ -9,11 +9,10 @@ import { useSidebar } from "@/lib/sidebar-context";
 export const Route = createFileRoute("/_app")({
   loader: async () => {
     try {
-      const home = await getHomeFn();
+      const { home, totalInvested } = await getHomeOverviewFn();
       if (!home?.address) {
         throw redirect({ to: "/setup" });
       }
-      const totalInvested = await getTotalInvestedFn();
       return { home, totalInvested };
     } catch (err) {
       if (err instanceof Error && err.message === "Not authenticated") {

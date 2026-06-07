@@ -68,3 +68,17 @@ export const getTotalInvestedFn = createServerFn({ method: "GET" }).handler(asyn
   if (!home) return 0;
   return calculateTotalInvested(home.id, home.purchasePrice);
 });
+
+/**
+ * Home + total-invested in a single round trip, for the app shell sidebar.
+ *
+ * Folds what used to be two server-function calls (getHomeFn +
+ * getTotalInvestedFn, each re-fetching the home) into one request.
+ */
+export const getHomeOverviewFn = createServerFn({ method: "GET" }).handler(async () => {
+  const user = await requireSessionUser();
+  const home = await getHome(user.id);
+  if (!home) return { home: null, totalInvested: 0 };
+  const totalInvested = await calculateTotalInvested(home.id, home.purchasePrice);
+  return { home, totalInvested };
+});
