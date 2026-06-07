@@ -59,7 +59,8 @@ async function serveDocument(request: Request): Promise<Response> {
     headers: {
       "Content-Type": doc.mimeType,
       "Content-Disposition": `inline; filename="${doc.filename.replace(/["\\\r\n]/g, "")}"`,
-      "Cache-Control": "private, max-age=60",
+      // Storage keys are unique per upload, so the bytes never change.
+      "Cache-Control": "private, max-age=31536000, immutable",
     },
   });
 }

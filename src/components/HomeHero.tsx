@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ImagePlus, Camera, X } from "lucide-react";
 import { uploadHomePhotoFn, removeHomePhotoFn } from "@/server/home";
-import { isSupportedWebImage, UNSUPPORTED_IMAGE_MESSAGE } from "@/lib/image";
+import { isSupportedWebImage, optimizeImage, UNSUPPORTED_IMAGE_MESSAGE } from "@/lib/image";
 import type { InferSelectModel } from "drizzle-orm";
 import type { homes } from "@/db/schema";
 
@@ -49,9 +49,14 @@ export function HomeHero({ home }: { home: Home }) {
 
     setPending(true);
     try {
-      const fileContent = await fileToBase64(file);
+      const optimized = await optimizeImage(file, { maxEdge: 2048, quality: 0.82 });
+      const fileContent = await fileToBase64(optimized);
       await uploadHomePhotoFn({
-        data: { fileContent, mimeType: file.type || "image/jpeg", filename: file.name },
+        data: {
+          fileContent,
+          mimeType: optimized.type || "image/jpeg",
+          filename: optimized.name,
+        },
       });
       window.location.reload();
     } catch (err) {
@@ -74,7 +79,7 @@ export function HomeHero({ home }: { home: Home }) {
 
   return (
     <div
-      className="relative h-52 w-full overflow-hidden border-b border-[var(--line)] sm:h-72"
+      className="relative h-52 w-full overflow-hidden border-b border-[var(--line)] bg-[var(--sand)] sm:h-72"
       style={{ opacity }}
     >
       <input
@@ -87,7 +92,13 @@ export function HomeHero({ home }: { home: Home }) {
 
       {photoUrl ? (
         <>
-          <img src={photoUrl} alt="Your home" className="h-full w-full object-cover" />
+          <img
+            src={photoUrl}
+            alt="Your home"
+            className="h-full w-full object-cover"
+            decoding="async"
+            fetchPriority="high"
+          />
           {/* Legibility wash + a touch of editorial vignette. */}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--bg-base)] via-transparent to-transparent" />
         </>
