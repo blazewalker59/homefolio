@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createRoomFn, updateRoomFn, deleteRoomFn, getRoomsPageFn } from "@/server/room";
 import { listItemsByRoomFn, createItemFn, updateItemFn, deleteItemFn } from "@/server/item";
 import { ROOM_CATEGORIES, getRoomCategory } from "@/lib/room-categories";
@@ -23,6 +23,9 @@ interface RoomWithItems extends Room {
 }
 
 export const Route = createFileRoute("/_app/rooms")({
+  validateSearch: (search: Record<string, unknown>): { focus?: string } => ({
+    focus: typeof search.focus === "string" ? search.focus : undefined,
+  }),
   loader: async () => {
     try {
       const { rooms, templates } = await getRoomsPageFn();
@@ -39,7 +42,21 @@ export const Route = createFileRoute("/_app/rooms")({
 
 function RoomsPage() {
   const { rooms: initialRooms, templates } = Route.useLoaderData();
+  const { focus } = Route.useSearch();
   const [rooms, setRooms] = useState(initialRooms);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+
+  // Deep-link from the blueprint: scroll the focused room into view and flash
+  // a highlight on it.
+  useEffect(() => {
+    if (!focus) return;
+    const el = document.getElementById(`room-${focus}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    setHighlightId(focus);
+    const t = setTimeout(() => setHighlightId(null), 2500);
+    return () => clearTimeout(t);
+  }, [focus]);
   const [showCreate, setShowCreate] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [addItemRoomId, setAddItemRoomId] = useState<string | null>(null);
@@ -187,6 +204,7 @@ function RoomsPage() {
             <RoomCard
               key={room.id}
               room={room}
+              highlighted={highlightId === room.id}
               onEdit={() => setEditingRoom(room)}
               onDelete={() => handleDelete(room.id)}
               onAddItem={() => setAddItemRoomId(room.id)}
@@ -244,6 +262,7 @@ function RoomsPage() {
 
 function RoomCard({
   room,
+  highlighted,
   onEdit,
   onDelete,
   onAddItem,
@@ -251,6 +270,7 @@ function RoomCard({
   pending,
 }: {
   room: RoomWithItems;
+  highlighted: boolean;
   onEdit: () => void;
   onDelete: () => void;
   onAddItem: () => void;
@@ -260,7 +280,12 @@ function RoomCard({
   const category = getRoomCategory(room.category);
 
   return (
-    <article className="island-shell feature-card rise-in relative rounded-2xl p-5">
+    <article
+      id={`room-${room.id}`}
+      className={`island-shell feature-card rise-in relative rounded-2xl p-5 transition ${
+        highlighted ? "ring-2 ring-[var(--lagoon-deep)] ring-offset-2" : ""
+      }`}
+    >
       <div className="mb-3 flex items-start justify-between">
         <div>
           <h2 className="text-lg font-semibold text-[var(--sea-ink)]">{room.name}</h2>

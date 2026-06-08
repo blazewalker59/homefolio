@@ -248,3 +248,23 @@ export async function calculateReceiptTotal(homeId: string): Promise<number> {
     return total + amount;
   }, 0);
 }
+
+/**
+ * Sum receipt amounts invested in a single room: receipts attached directly to
+ * the room, plus receipts attached to items located in that room. `itemIds`
+ * are the ids of the room's items (the caller already has them).
+ */
+export async function calculateRoomReceiptTotal(
+  homeId: string,
+  roomId: string,
+  itemIds: string[],
+): Promise<number> {
+  const receipts = await listReceiptsByHome(homeId);
+  const itemSet = new Set(itemIds);
+  return receipts.reduce((total, receipt) => {
+    const inRoom = receipt.entityType === "room" && receipt.entityId === roomId;
+    const inItem = receipt.entityType === "item" && itemSet.has(receipt.entityId);
+    if (!inRoom && !inItem) return total;
+    return total + (receipt.amount ? parseFloat(receipt.amount) : 0);
+  }, 0);
+}

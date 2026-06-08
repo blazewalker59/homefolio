@@ -30,6 +30,10 @@ function AppLayout() {
   const { open, setOpen } = useSidebar();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
+  // The blueprint is an immersive editor — drop the decorative hero so the
+  // canvas is visible without scrolling (especially on mobile).
+  const isBlueprint = pathname.startsWith("/blueprint");
+
   // Close the popout whenever the route changes.
   useEffect(() => {
     setOpen(false);
@@ -37,7 +41,7 @@ function AppLayout() {
 
   return (
     <>
-      <HomeHero home={home} />
+      {!isBlueprint && <HomeHero home={home} />}
       <SectionTabs />
       {/* Bottom padding clears the fixed mobile tab bar (hidden at md+). */}
       <div className="pb-24 md:pb-10">

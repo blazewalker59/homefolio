@@ -15,7 +15,9 @@ import {
   getDocumentUrl,
   deleteDocument,
   updateDocument,
+  calculateRoomReceiptTotal,
 } from "@/lib/document";
+import { listItemsByRoom } from "@/lib/item";
 import { requireSessionUser } from "@/lib/auth/session";
 import {
   DOCUMENT_TYPES,
@@ -165,3 +167,24 @@ export const getDocumentTypesFn = createServerFn({ method: "GET" }).handler(asyn
 export const getEntityTypesFn = createServerFn({ method: "GET" }).handler(async () => {
   return DOCUMENT_ENTITY_TYPES;
 });
+
+const roomInvestmentSchema = z.object({ roomId: z.string().uuid() });
+
+/**
+ * Total invested in a room: receipts attached to the room plus receipts on the
+ * items located in it.
+ */
+export const getRoomInvestmentFn = createServerFn({ method: "GET" })
+  .inputValidator((raw: unknown) => roomInvestmentSchema.parse(raw))
+  .handler(async ({ data }) => {
+    const user = await requireSessionUser();
+    const home = await getHome(user.id);
+    if (!home) return { total: 0 };
+    const items = await listItemsByRoom(data.roomId);
+    const total = await calculateRoomReceiptTotal(
+      home.id,
+      data.roomId,
+      items.map((i) => i.id),
+    );
+    return { total };
+  });

@@ -1,13 +1,22 @@
 import { Link } from "@tanstack/react-router";
-import { DoorOpen, Wrench, Package, FileText, ClipboardList, type LucideIcon } from "lucide-react";
+import {
+  DoorOpen,
+  Wrench,
+  Package,
+  FileText,
+  ClipboardList,
+  Map,
+  type LucideIcon,
+} from "lucide-react";
 
 type Tab = {
-  to: "/rooms" | "/systems" | "/items" | "/documents" | "/activities";
+  to: "/rooms" | "/systems" | "/items" | "/documents" | "/activities" | "/blueprint";
   label: string;
   icon: LucideIcon;
 };
 
 const TABS: Tab[] = [
+  { to: "/blueprint", label: "Blueprint", icon: Map },
   { to: "/rooms", label: "Rooms", icon: DoorOpen },
   { to: "/systems", label: "Systems", icon: Wrench },
   { to: "/items", label: "Items", icon: Package },
