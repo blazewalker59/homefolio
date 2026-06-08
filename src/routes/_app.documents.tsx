@@ -1,7 +1,12 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { getHomeFn } from "@/server/home";
-import { listHomeDocumentsFn, deleteDocumentFn, updateDocumentFn } from "@/server/document";
+import {
+  listHomeDocumentsFn,
+  deleteDocumentFn,
+  updateDocumentFn,
+  getDocumentUrlFn,
+} from "@/server/document";
 import { listRoomsFn } from "@/server/room";
 import { listSystemsFn } from "@/server/system";
 import { listItemsFn } from "@/server/item";
@@ -72,6 +77,7 @@ function DocumentsPage() {
     id: string;
   } | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [opening, setOpening] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [editType, setEditType] = useState<DocumentType>("other");
   const [editEntityType, setEditEntityType] = useState<DocumentEntityType>("home");
@@ -79,6 +85,18 @@ function DocumentsPage() {
   const [editNotes, setEditNotes] = useState("");
   const [editAmount, setEditAmount] = useState("");
   const [saving, setSaving] = useState(false);
+
+  async function openDocument(documentId: string) {
+    setOpening(documentId);
+    try {
+      const url = await getDocumentUrlFn({ data: { documentId } });
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to open document");
+    } finally {
+      setOpening(null);
+    }
+  }
 
   async function handleDelete(documentId: string) {
     if (!confirm("Are you sure you want to delete this document?")) return;
@@ -396,7 +414,14 @@ function DocumentsPage() {
                 ) : (
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <div className="font-medium text-[var(--sea-ink)]">{doc.filename}</div>
+                      <button
+                        type="button"
+                        onClick={() => openDocument(doc.id)}
+                        disabled={opening === doc.id}
+                        className="block max-w-full truncate text-left font-medium text-[var(--sea-ink)] underline-offset-2 transition hover:text-[var(--lagoon-deep)] hover:underline disabled:opacity-50"
+                      >
+                        {opening === doc.id ? "Opening…" : doc.filename}
+                      </button>
                       <div className="mt-1 flex flex-wrap items-center gap-2">
                         <span className="rounded bg-[var(--chip-bg)] px-2 py-0.5 text-xs text-[var(--sea-ink-soft)]">
                           {DOCUMENT_TYPE_LABELS[doc.type] || doc.type}

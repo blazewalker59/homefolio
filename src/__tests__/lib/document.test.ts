@@ -7,6 +7,7 @@ import {
   deleteDocument,
   listReceiptsByHome,
   calculateReceiptTotal,
+  calculateRoomReceiptTotal,
 } from "@/lib/document";
 import * as storage from "@/lib/storage";
 
@@ -400,6 +401,49 @@ describe("listReceiptsByHome", () => {
 
     expect(result).toEqual(mockReceipts);
     expect(result.every((r) => r.type === "receipt")).toBe(true);
+  });
+});
+
+describe("calculateRoomReceiptTotal", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("sums receipts attached to the room and to its items, ignoring others", async () => {
+    const mockReceipts = [
+      { id: "d1", type: "receipt", entityType: "room", entityId: "room-1", amount: "100.00" },
+      { id: "d2", type: "receipt", entityType: "item", entityId: "item-1", amount: "50.00" },
+      { id: "d3", type: "receipt", entityType: "item", entityId: "item-x", amount: "999.00" }, // not in room
+      { id: "d4", type: "receipt", entityType: "room", entityId: "room-2", amount: "999.00" }, // other room
+      { id: "d5", type: "receipt", entityType: "item", entityId: "item-2", amount: "25.50" },
+    ];
+    const mockDb = {
+      select: vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            orderBy: vi.fn().mockResolvedValue(mockReceipts),
+          }),
+        }),
+      }),
+    };
+    mockGetDb.mockResolvedValue(mockDb as any);
+
+    const total = await calculateRoomReceiptTotal("home-1", "room-1", ["item-1", "item-2"]);
+
+    expect(total).toBeCloseTo(175.5); // 100 + 50 + 25.50
+  });
+
+  it("returns 0 when nothing is attached to the room or its items", async () => {
+    const mockDb = {
+      select: vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({ orderBy: vi.fn().mockResolvedValue([]) }),
+        }),
+      }),
+    };
+    mockGetDb.mockResolvedValue(mockDb as any);
+
+    expect(await calculateRoomReceiptTotal("home-1", "room-1", [])).toBe(0);
   });
 });
 

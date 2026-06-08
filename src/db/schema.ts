@@ -9,8 +9,10 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types
@@ -22,6 +24,12 @@ export interface TemplateField {
   type: "text" | "number" | "date" | "select" | "boolean";
   options?: string[];
   required?: boolean;
+}
+
+/** A single vertex of a blueprint Shape, in abstract grid units. */
+export interface ShapePoint {
+  x: number;
+  y: number;
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -381,6 +389,74 @@ export const activities = pgTable(
 );
 
 // ──────────────────────────────────────────────────────────────────────────────
+// Floor
+//
+// A named level of the home within the Blueprint (Basement, Ground, Upstairs).
+// Floor is purely a spatial/blueprint concept — it lives here, never on the
+// Room. Floors are ordered by sort_order. `scale` is reserved (nullable) for a
+// future real-world-measurement feature; v1 treats the grid as abstract. Blueprint
+// shapes belong to a floor and cascade-delete with it (shapes table added in a
+// later slice).
+// ──────────────────────────────────────────────────────────────────────────────
+
+export const floors = pgTable(
+  "floors",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    homeId: uuid("home_id")
+      .notNull()
+      .references(() => homes.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    // Reserved: grid-units-per-real-world-unit. Null = abstract grid (v1).
+    scale: numeric("scale", { precision: 10, scale: 4 }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("floors_home_idx").on(t.homeId)],
+);
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Shape
+//
+// A region drawn on one Floor of the Blueprint, stored as an array of polygon
+// vertices in abstract grid units (supports L-shapes, not just rectangles). A
+// Shape optionally links 1:1 to a Room: `room_id` is nullable, with a partial
+// unique index so at most one Shape references a given Room. `ON DELETE SET
+// NULL` means deleting a Room leaves its Shape in place but unlinked. Shapes
+// cascade-delete with their Floor.
+// ──────────────────────────────────────────────────────────────────────────────
+
+export const shapes = pgTable(
+  "shapes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    homeId: uuid("home_id")
+      .notNull()
+      .references(() => homes.id, { onDelete: "cascade" }),
+    floorId: uuid("floor_id")
+      .notNull()
+      .references(() => floors.id, { onDelete: "cascade" }),
+    roomId: uuid("room_id").references(() => rooms.id, { onDelete: "set null" }),
+    points: jsonb("points").notNull().$type<ShapePoint[]>(),
+    label: text("label"),
+    color: text("color"),
+    z: integer("z").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("shapes_home_idx").on(t.homeId),
+    index("shapes_floor_idx").on(t.floorId),
+    // 1 Room ↔ 1 Shape: a room can be referenced by at most one shape. Partial
+    // so multiple unlinked (null room_id) shapes are still allowed.
+    uniqueIndex("shapes_room_uq")
+      .on(t.roomId)
+      .where(sql`${t.roomId} is not null`),
+  ],
+);
+
+// ──────────────────────────────────────────────────────────────────────────────
 // Relations
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -407,6 +483,19 @@ export const homesRelations = relations(homes, ({ one, many }) => ({
   itemTemplates: many(itemTemplates),
   documents: many(documents),
   activities: many(activities),
+  floors: many(floors),
+  shapes: many(shapes),
+}));
+
+export const floorsRelations = relations(floors, ({ one, many }) => ({
+  home: one(homes, { fields: [floors.homeId], references: [homes.id] }),
+  shapes: many(shapes),
+}));
+
+export const shapesRelations = relations(shapes, ({ one }) => ({
+  home: one(homes, { fields: [shapes.homeId], references: [homes.id] }),
+  floor: one(floors, { fields: [shapes.floorId], references: [floors.id] }),
+  room: one(rooms, { fields: [shapes.roomId], references: [rooms.id] }),
 }));
 
 export const roomsRelations = relations(rooms, ({ one, many }) => ({

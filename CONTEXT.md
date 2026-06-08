@@ -36,7 +36,16 @@ A timestamped event in the home's history. Activities form a chronological log �
 
 ### Blueprint
 
-A floor plan of the home. Optional — the app functions without one. Blueprints are a static image for visual reference, not interactive.
+An interactive floor plan of the home — a grid-based sandbox where the user draws, resizes, and moves shapes to lay out the home across one or more floors. Optional: the app functions without one. The Blueprint is a drawing layer reconciled with Rooms after the fact, not a live view of the rooms list. It doubles as a spatial navigation surface: a shape linked to a Room can be opened to manage that room.
+
+### Floor
+
+A named level of the home within the Blueprint (e.g. Basement, Ground, Upstairs). Floor is purely a spatial/blueprint concept — it lives on the shape, not on the Room. An unplaced Room has no floor. The Room model and rooms list are unaffected by floors.
+
+### Shape
+
+A single freeform region drawn on the Blueprint (supports L-shapes / polygons, not just rectangles). A Shape belongs to exactly one Floor and optionally links to exactly one Room (1:1 when linked). Shapes can sit unlinked. Linking a Shape to a Room either references an existing Room or creates a new one.
+_Avoid_: rectangle, box, element (use "Shape").
 
 ### Maintenance Reminder
 
@@ -60,7 +69,12 @@ A time-based notification tied to an Item or System. Can be interval-based (ever
 - **Data export**: PDF report export for v1. Formatted document summarizing rooms, items, receipts, and maintenance history. Raw data export (JSON/CSV + file zip) deferred to post-v1.
 - **Search and navigation**: Both global search (searches across rooms, systems, items, activities, and documents) and filtered browsing (drill down by room/system, filter by item type, date, etc.).
 - **Blueprint acquisition**: Prefer public records pull first. If unavailable, explore third-party drawing utilities. If both are too clunky, defer blueprints entirely — the app works as a text-based list of rooms and systems.
-- **Blueprint rendering**: Static image only for v1. No interactive floor plan (no room coordinates, no click-to-navigate). Interactive blueprints deferred to post-v1.
+- **Blueprint rendering**: Interactive floor plan (reverses the earlier "static image only" decision). A grid-based sandbox where users draw, resize, and move freeform Shapes to lay out the home. Shapes support polygons (L-shapes), not just rectangles. The Blueprint is a drawing layer reconciled with Rooms after drawing — not a live view of the rooms list.
+- **Blueprint ↔ Rooms link**: A Shape optionally links to one Room (1:1 when linked); a Room maps to at most one Shape. Linking can happen after a Shape is drawn (post-hoc mapping), and unlinked Shapes are allowed. From a Shape the user can link to an existing Room or create a new Room on the spot. A linked Shape supports opening that Room to manage it (spatial navigation).
+- **Blueprint floors**: The Blueprint supports multiple named Floors (levels). Each Shape belongs to one Floor. Floor is purely spatial — it lives on the Shape, not the Room; an unplaced Room has no floor and the rooms list is unaffected.
+- **Blueprint editing model**: The canvas has an explicit Edit/View toggle. View mode opens a Shape's linked Room (navigation, no accidental edits); Edit mode draws/moves/resizes and disables navigation. Drawing is rect-first (drag a grid-snapped rectangle) with optional vertex editing to form L-shapes/polygons. Built on react-konva (client-only). Edits persist via debounced autosave.
+- **Blueprint scale**: Grid is abstract for v1 (alignment only — no feet/meters, no computed area). Coordinates are stored unit-agnostically with a reserved nullable scale field so real measurements can be added later without migration.
+- **Blueprint deletion**: Deleting a Shape never deletes its Room (the Shape is only geometry). Deleting a Room leaves its Shape in place but unlinked — no cross-domain cascade, consistent with allowing unlinked Shapes.
 - **Room photos**: Room photos are Documents with `type=image`. One image per room can be marked as the "primary photo" for visual representation (room cards, lists). Gallery view shows all images attached to the room.
 - **Documents**: Typed files in a generic file store. Type is a label only — fixed list for v1: receipt, image, manual, warranty, contract, other. All documents share the same structure: file + type + optional notes. Exception: receipts have an additional `amount` field to support financial tracking (Total Invested). Can be attached to a Home, Room, System, or Item.
 - **Activity Log**: Included in v1. A timestamped timeline of events in the home's history. Each activity has: timestamp, type (maintenance, purchase, improvement, repair, inspection, other), description, optional related entities (Room, System, Item), optional notes, and optional photos. Most user actions auto-generate activity entries. Uploading a receipt auto-creates a "purchase" activity with the receipt attached. Users can also manually create activity entries for events that happened outside the app or before signup.

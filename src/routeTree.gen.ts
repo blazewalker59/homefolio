@@ -20,6 +20,7 @@ import { Route as AppSystemsRouteImport } from './routes/_app.systems'
 import { Route as AppRoomsRouteImport } from './routes/_app.rooms'
 import { Route as AppItemsRouteImport } from './routes/_app.items'
 import { Route as AppDocumentsRouteImport } from './routes/_app.documents'
+import { Route as AppBlueprintRouteImport } from './routes/_app.blueprint'
 import { Route as AppActivitiesRouteImport } from './routes/_app.activities'
 
 const TemplatesRoute = TemplatesRouteImport.update({
@@ -76,6 +77,11 @@ const AppDocumentsRoute = AppDocumentsRouteImport.update({
   path: '/documents',
   getParentRoute: () => AppRoute,
 } as any)
+const AppBlueprintRoute = AppBlueprintRouteImport.update({
+  id: '/blueprint',
+  path: '/blueprint',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppActivitiesRoute = AppActivitiesRouteImport.update({
   id: '/activities',
   path: '/activities',
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof SignInRoute
   '/templates': typeof TemplatesRoute
   '/activities': typeof AppActivitiesRoute
+  '/blueprint': typeof AppBlueprintRoute
   '/documents': typeof AppDocumentsRoute
   '/items': typeof AppItemsRoute
   '/rooms': typeof AppRoomsRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
   '/templates': typeof TemplatesRoute
   '/activities': typeof AppActivitiesRoute
+  '/blueprint': typeof AppBlueprintRoute
   '/documents': typeof AppDocumentsRoute
   '/items': typeof AppItemsRoute
   '/rooms': typeof AppRoomsRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/templates': typeof TemplatesRoute
   '/_app/activities': typeof AppActivitiesRoute
+  '/_app/blueprint': typeof AppBlueprintRoute
   '/_app/documents': typeof AppDocumentsRoute
   '/_app/items': typeof AppItemsRoute
   '/_app/rooms': typeof AppRoomsRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/templates'
     | '/activities'
+    | '/blueprint'
     | '/documents'
     | '/items'
     | '/rooms'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/templates'
     | '/activities'
+    | '/blueprint'
     | '/documents'
     | '/items'
     | '/rooms'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/templates'
     | '/_app/activities'
+    | '/_app/blueprint'
     | '/_app/documents'
     | '/_app/items'
     | '/_app/rooms'
@@ -255,6 +267,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDocumentsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/blueprint': {
+      id: '/_app/blueprint'
+      path: '/blueprint'
+      fullPath: '/blueprint'
+      preLoaderRoute: typeof AppBlueprintRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/activities': {
       id: '/_app/activities'
       path: '/activities'
@@ -267,6 +286,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppActivitiesRoute: typeof AppActivitiesRoute
+  AppBlueprintRoute: typeof AppBlueprintRoute
   AppDocumentsRoute: typeof AppDocumentsRoute
   AppItemsRoute: typeof AppItemsRoute
   AppRoomsRoute: typeof AppRoomsRoute
@@ -275,6 +295,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppActivitiesRoute: AppActivitiesRoute,
+  AppBlueprintRoute: AppBlueprintRoute,
   AppDocumentsRoute: AppDocumentsRoute,
   AppItemsRoute: AppItemsRoute,
   AppRoomsRoute: AppRoomsRoute,
